@@ -1,0 +1,14 @@
+{
+  "name": "elm-real-world",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "parcel ./index.html"
+  },
+  "devDependencies": {
+    "@parcel/transformer-elm": "2.0.0-beta.3.1",
+    "elm": "^0.19.1-5",
+    "parcel": "^2.0.0-beta.3.1"
+  }
+}

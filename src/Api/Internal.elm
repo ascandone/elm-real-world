@@ -60,8 +60,8 @@ type Request data
 
 
 builder : (Config data -> Config data) -> Request data -> Request data
-builder =
-    Debug.todo ""
+builder f (Request config) =
+    Request (f config)
 
 
 withBody : Value -> Request data -> Request data

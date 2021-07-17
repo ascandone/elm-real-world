@@ -6,7 +6,8 @@ import Json.Decode as Dec exposing (Decoder)
 
 tagsDecoder : Decoder (List String)
 tagsDecoder =
-    Dec.list Dec.string
+    Dec.field "tags" <|
+        Dec.list Dec.string
 
 
 get : Request (List String)

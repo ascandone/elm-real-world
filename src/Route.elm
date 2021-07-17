@@ -7,6 +7,8 @@ import Url.Parser as Parser exposing ((</>), Parser, map, s, string, top)
 type Route
     = Home
     | Profile String
+    | ViewArticle String
+    | ViewProfile String
 
 
 toHref : Route -> String
@@ -16,6 +18,12 @@ toHref route =
             "/"
 
         Profile username ->
+            "/profile/" ++ username
+
+        ViewArticle slug ->
+            "/article/" ++ slug
+
+        ViewProfile username ->
             "/profile/" ++ username
 
 

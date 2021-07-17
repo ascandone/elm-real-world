@@ -16,21 +16,31 @@ import Ports
 import Process
 import Task
 import View.ArticlePreview
+import View.NavPills
+
+
+type FeedType
+    = YourFeed
+    | GlobalFeed
+    | Tag String
 
 
 type alias Model =
     { tags : Maybe (List String)
+    , feed : FeedType
     }
 
 
 type Msg
     = GotTags (Api.Response (List String))
+    | SelectedFeed FeedType
     | Noop
 
 
 init : ( Model, Cmd Msg )
 init =
     ( { tags = Nothing
+      , feed = GlobalFeed
       }
     , Cmd.batch
         [ Api.Tags.get |> Api.send GotTags
@@ -41,9 +51,6 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg, Maybe Never )
 update msg model =
     case msg of
-        Noop ->
-            App.pure model
-
         GotTags res ->
             case res of
                 Ok tags ->
@@ -52,6 +59,9 @@ update msg model =
                 Err _ ->
                     App.pure model
                         |> App.withCmd (Ports.logError "tags response error")
+
+        _ ->
+            App.pure model
 
 
 viewTagPill : String -> Html msg
@@ -94,28 +104,16 @@ view model =
                     [ div
                         [ class "feed-toggle"
                         ]
-                        [ ul
-                            [ class "nav nav-pills outline-active"
-                            ]
-                            [ li
-                                [ class "nav-item"
+                        [ let
+                            data =
+                                [ Just { item = GlobalFeed, text = "Global Feed" }
                                 ]
-                                [ a
-                                    [ class "nav-link disabled"
-                                    , A.href ""
-                                    ]
-                                    [ text "Your Feed" ]
-                                ]
-                            , li
-                                [ class "nav-item"
-                                ]
-                                [ a
-                                    [ class "nav-link active"
-                                    , A.href ""
-                                    ]
-                                    [ text "Global Feed" ]
-                                ]
-                            ]
+                                    |> List.filterMap identity
+                          in
+                          View.NavPills.view
+                            model.feed
+                            { onSelected = SelectedFeed }
+                            [ { item = GlobalFeed, text = "Global Feed" } ]
                         ]
                     , View.ArticlePreview.view
                         { onToggleFavorite = Noop }

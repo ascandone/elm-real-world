@@ -1,7 +1,7 @@
 module Route exposing (Route(..), parse, toHref)
 
 import Url exposing (Url)
-import Url.Parser as Parser exposing (Parser, map, string, top)
+import Url.Parser as Parser exposing ((</>), Parser, map, s, string, top)
 
 
 type Route
@@ -23,7 +23,7 @@ parser : Parser (Route -> a) a
 parser =
     Parser.oneOf
         [ map Home top
-        , map Profile string
+        , map Profile <| s "profile" </> string
         ]
 
 

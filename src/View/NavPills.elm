@@ -13,14 +13,14 @@ view active { onSelected } items =
                 (\data ->
                     li
                         [ class "nav-item"
-                        , A.classList [ ( "active", data.item == active ) ]
                         ]
                         [ a
-                            [ class "nav-link disabled"
+                            [ class "nav-link" -- disabled
                             , A.href "#"
                             , onClick (onSelected data.item)
+                            , A.classList [ ( "active", data.item == active ) ]
                             ]
-                            [ text data.text ]
+                            [ text ("#" ++ data.text) ]
                         ]
                 )
         )

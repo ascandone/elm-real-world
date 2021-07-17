@@ -94,7 +94,7 @@ update msg model =
                 Just Home ->
                     handleInit Page.Home HomeMsg Page.Home.init
 
-                Just (Profile _) ->
+                _ ->
                     Debug.todo "profile"
 
         ( Page.Home subModel, HomeMsg subMsg ) ->

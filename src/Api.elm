@@ -1,5 +1,6 @@
 module Api exposing
     ( Error
+    , Response(..)
     , send
     )
 
@@ -7,6 +8,7 @@ import Api.Internal exposing (Request(..))
 import Http
 import Json.Decode as Dec exposing (Decoder)
 import Json.Encode exposing (Value)
+import Url.Builder
 
 
 type alias Error =
@@ -35,8 +37,8 @@ responseDecoder decoder =
         ]
 
 
-send : Request data -> (Result Http.Error (Response data) -> msg) -> Cmd msg
-send (Request config) onResponse =
+send : (Result Http.Error (Response data) -> msg) -> Request data -> Cmd msg
+send onResponse (Request config) =
     Http.request
         { method = config.method
         , headers =

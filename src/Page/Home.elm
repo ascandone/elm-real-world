@@ -1,21 +1,45 @@
-module Pages.Home exposing (Model, update, view)
+module Page.Home exposing
+    ( Model
+    , Msg
+    , init
+    , update
+    , view
+    )
 
+import Api
+import Api.Tags
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
+import Http
+import Process
+import Task
 
 
 type alias Model =
-    ()
+    Int
 
 
 type Msg
     = Noop
+    | GotResponse (Result Http.Error (Api.Response (List String)))
+
+
+init : ( Model, Cmd Msg )
+init =
+    ( 0
+    , Cmd.batch
+        [ Process.sleep 1000 |> Task.perform (\_ -> Noop)
+        ]
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        _ ->
+        Noop ->
+            ( model + 1, Cmd.none )
+
+        GotResponse _ ->
             ( model, Cmd.none )
 
 

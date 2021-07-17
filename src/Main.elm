@@ -1,9 +1,13 @@
 module Main exposing (main)
 
 import Browser
+import Browser.Dom exposing (Error(..))
 import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
+import Page exposing (Page)
+import Page.Home
+import Route as Route exposing (Route(..))
 import Url
 
 
@@ -21,8 +25,7 @@ main =
 
 type alias Model =
     { key : Nav.Key
-    , url : Url.Url
-    , property : String
+    , page : Page
     }
 
 
@@ -32,26 +35,29 @@ type alias Flags =
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
-    ( Model key url "modelInitialValue", Cmd.none )
+    { key = key
+    , page = Page.NotFound
+    }
+        |> update (UrlChanged url)
 
 
 type Msg
-    = Msg1
-    | Msg2
-    | UrlRequested Browser.UrlRequest
+    = UrlRequested Browser.UrlRequest
     | UrlChanged Url.Url
+    | HomeMsg Page.Home.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        Msg1 ->
-            ( model, Cmd.none )
-
-        Msg2 ->
-            ( model, Cmd.none )
-
-        UrlRequested urlRequest ->
+    let
+        inner : (subModel -> Page) -> (msg -> Msg) -> ( subModel, Cmd msg ) -> ( Model, Cmd Msg )
+        inner constr toMsg ( subModel, cmd ) =
+            ( { model | page = constr subModel }
+            , Cmd.map toMsg cmd
+            )
+    in
+    case ( model.page, msg ) of
+        ( _, UrlRequested urlRequest ) ->
             case urlRequest of
                 Browser.Internal url ->
                     ( model, Nav.pushUrl model.key (Url.toString url) )
@@ -59,10 +65,22 @@ update msg model =
                 Browser.External href ->
                     ( model, Nav.load href )
 
-        UrlChanged url ->
-            ( { model | url = url }
-            , Cmd.none
-            )
+        ( _, UrlChanged url ) ->
+            case Route.parse url of
+                Nothing ->
+                    ( { model | page = Page.NotFound }, Cmd.none )
+
+                Just Home ->
+                    inner Page.Home HomeMsg Page.Home.init
+
+                Just (Profile _) ->
+                    Debug.todo "profile"
+
+        ( Page.Home subModel, HomeMsg subMsg ) ->
+            inner Page.Home HomeMsg (Page.Home.update subMsg subModel)
+
+        _ ->
+            ( model, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg

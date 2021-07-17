@@ -1,6 +1,6 @@
 module Api exposing
     ( ApiError
-    , Response(..)
+    , Response
     , send
     )
 
@@ -15,10 +15,13 @@ type alias ApiError =
     }
 
 
-type Response data
-    = ResponseOk data
-    | ApiError_ ApiError
+type ResponseErr
+    = ApiError_ ApiError
     | HttpError Http.Error
+
+
+type alias Response data =
+    Result ResponseErr data
 
 
 errorDecoder : Decoder ApiError
@@ -66,13 +69,13 @@ send onResponse (Request config) =
                     onResponse <|
                         case result of
                             Ok (Ok data) ->
-                                ResponseOk data
+                                Ok data
 
                             Ok (Err apiErr) ->
-                                ApiError_ apiErr
+                                Err <| ApiError_ apiErr
 
                             Err httpErr ->
-                                HttpError httpErr
+                                Err <| HttpError httpErr
                 )
                 (responseDecoder config.decoder)
         , timeout = Nothing

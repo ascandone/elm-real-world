@@ -1,5 +1,5 @@
 module Api exposing
-    ( Error
+    ( ApiError
     , Response(..)
     , send
     )
@@ -7,37 +7,37 @@ module Api exposing
 import Api.Internal exposing (Request(..))
 import Http
 import Json.Decode as Dec exposing (Decoder)
-import Json.Encode exposing (Value)
 import Url.Builder
 
 
-type alias Error =
+type alias ApiError =
     { body : List String
     }
 
 
 type Response data
-    = Ok data
-    | Err Error
+    = ResponseOk data
+    | ApiError_ ApiError
+    | HttpError Http.Error
 
 
-errorDecoder : Decoder Error
+errorDecoder : Decoder ApiError
 errorDecoder =
-    Dec.map Error
+    Dec.map ApiError
         (Dec.field "errors"
             (Dec.field "body" (Dec.list Dec.string))
         )
 
 
-responseDecoder : Decoder data -> Decoder (Response data)
+responseDecoder : Decoder data -> Decoder (Result ApiError data)
 responseDecoder decoder =
     Dec.oneOf
-        [ Dec.map Err errorDecoder
-        , Dec.map Ok decoder
+        [ Dec.map Result.Err errorDecoder
+        , Dec.map Result.Ok decoder
         ]
 
 
-send : (Result Http.Error (Response data) -> msg) -> Request data -> Cmd msg
+send : (Response data -> msg) -> Request data -> Cmd msg
 send onResponse (Request config) =
     Http.request
         { method = config.method
@@ -61,7 +61,19 @@ send onResponse (Request config) =
                 Just body ->
                     Http.jsonBody body
         , expect =
-            Http.expectJson onResponse
+            Http.expectJson
+                (\result ->
+                    onResponse <|
+                        case result of
+                            Ok (Ok data) ->
+                                ResponseOk data
+
+                            Ok (Err apiErr) ->
+                                ApiError_ apiErr
+
+                            Err httpErr ->
+                                HttpError httpErr
+                )
                 (responseDecoder config.decoder)
         , timeout = Nothing
         , tracker = Nothing

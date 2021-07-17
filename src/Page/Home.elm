@@ -15,6 +15,7 @@ import Http
 import Ports
 import Process
 import Task
+import View.ArticlePreview
 
 
 type alias Model =
@@ -24,6 +25,7 @@ type alias Model =
 
 type Msg
     = GotTags (Api.Response (List String))
+    | Noop
 
 
 init : ( Model, Cmd Msg )
@@ -39,6 +41,9 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg, Maybe Never )
 update msg model =
     case msg of
+        Noop ->
+            App.pure model
+
         GotTags res ->
             case res of
                 Ok tags ->
@@ -112,104 +117,24 @@ view model =
                                 ]
                             ]
                         ]
-                    , div
-                        [ class "article-preview"
-                        ]
-                        [ div
-                            [ class "article-meta"
-                            ]
-                            [ a
-                                [ A.href "profile.html"
-                                ]
-                                [ img
-                                    [ A.src "http://i.imgur.com/Qr71crq.jpg"
-                                    ]
-                                    []
-                                ]
-                            , div
-                                [ class "info"
-                                ]
-                                [ a
-                                    [ A.href ""
-                                    , class "author"
-                                    ]
-                                    [ text "Eric Simons" ]
-                                , span
-                                    [ class "date"
-                                    ]
-                                    [ text "January 20th" ]
-                                ]
-                            , button
-                                [ class "btn btn-outline-primary btn-sm pull-xs-right"
-                                ]
-                                [ i
-                                    [ class "ion-heart"
-                                    ]
-                                    []
-                                , text "29"
-                                ]
-                            ]
-                        , a
-                            [ A.href ""
-                            , class "preview-link"
-                            ]
-                            [ h1 []
-                                [ text "How to build webapps that scale" ]
-                            , p []
-                                [ text "This is the description for the post." ]
-                            , span []
-                                [ text "Read more..." ]
-                            ]
-                        ]
-                    , div
-                        [ class "article-preview"
-                        ]
-                        [ div
-                            [ class "article-meta"
-                            ]
-                            [ a
-                                [ A.href "profile.html"
-                                ]
-                                [ img
-                                    [ A.src "http://i.imgur.com/N4VcUeJ.jpg"
-                                    ]
-                                    []
-                                ]
-                            , div
-                                [ class "info"
-                                ]
-                                [ a
-                                    [ A.href ""
-                                    , class "author"
-                                    ]
-                                    [ text "Albert Pai" ]
-                                , span
-                                    [ class "date"
-                                    ]
-                                    [ text "January 20th" ]
-                                ]
-                            , button
-                                [ class "btn btn-outline-primary btn-sm pull-xs-right"
-                                ]
-                                [ i
-                                    [ class "ion-heart"
-                                    ]
-                                    []
-                                , text "32"
-                                ]
-                            ]
-                        , a
-                            [ A.href ""
-                            , class "preview-link"
-                            ]
-                            [ h1 []
-                                [ text "The song you won't ever stop singing. No matter how hard you try." ]
-                            , p []
-                                [ text "This is the description for the post." ]
-                            , span []
-                                [ text "Read more..." ]
-                            ]
-                        ]
+                    , View.ArticlePreview.view
+                        { onToggleFavorite = Noop }
+                        { slug = "String"
+                        , title = "String"
+                        , description = "String"
+                        , body = "String"
+                        , tagList = [ "String" ]
+                        , createdAt = "String"
+                        , updatedAt = "String"
+                        , favorited = True
+                        , favoritesCount = 32
+                        , author =
+                            { username = "String"
+                            , bio = "String"
+                            , image = Nothing
+                            , following = True
+                            }
+                        }
                     ]
                 , div [ class "col-md-3" ]
                     [ div [ class "sidebar" ]

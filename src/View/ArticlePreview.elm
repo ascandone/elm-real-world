@@ -1,10 +1,11 @@
-module View.ArticlePreview exposing (Msg(..), view)
+module View.ArticlePreview exposing (view)
 
 import Api.Articles exposing (author)
 import Data.Article exposing (Article)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events exposing (onClick)
+import Html.Lazy exposing (lazy)
 import Misc exposing (defaultImage)
 import Route
 
@@ -13,8 +14,8 @@ type Msg
     = ToggledFavorite
 
 
-view : Article -> Html Msg
-view ({ author } as article) =
+view_ : Article -> Html Msg
+view_ ({ author } as article) =
     div [ class "article-preview" ]
         [ div [ class "article-meta" ]
             [ a [ A.href <| Route.toHref (Route.Profile author.username) ]
@@ -37,3 +38,10 @@ view ({ author } as article) =
             , span [] [ text "Read more..." ]
             ]
         ]
+
+
+view : { r | onToggleFavorite : msg } -> Article -> Html msg
+view { onToggleFavorite } article =
+    Html.map
+        (\ToggledFavorite -> onToggleFavorite)
+        (lazy view_ article)

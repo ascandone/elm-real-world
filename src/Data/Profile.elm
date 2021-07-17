@@ -1,13 +1,14 @@
 module Data.Profile exposing (Profile, decoder)
 
 import Json.Decode exposing (Decoder, bool, string, succeed)
-import Json.Decode.Pipeline exposing (required)
+import Json.Decode.Pipeline exposing (optional, required)
+import Misc exposing (optionalMaybe)
 
 
 type alias Profile =
     { username : String
     , bio : String
-    , image : String
+    , image : Maybe String
     , following : Bool
     }
 
@@ -17,5 +18,5 @@ decoder =
     succeed Profile
         |> required "username" string
         |> required "bio" string
-        |> required "image" string
+        |> optionalMaybe "image" string
         |> required "following" bool

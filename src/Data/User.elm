@@ -2,6 +2,7 @@ module Data.User exposing (User, decoder)
 
 import Json.Decode as Dec exposing (Decoder, string)
 import Json.Decode.Pipeline exposing (optional, required)
+import Misc exposing (optionalMaybe)
 
 
 type alias User =
@@ -21,5 +22,5 @@ decoder =
             |> required "token" string
             |> required "username" string
             |> required "bio" string
-            |> optional "image" (Dec.map Just string) Nothing
+            |> optionalMaybe "image" string
         )

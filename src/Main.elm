@@ -51,11 +51,31 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        inner : (subModel -> Page) -> (msg -> Msg) -> ( subModel, Cmd msg ) -> ( Model, Cmd Msg )
-        inner constr toMsg ( subModel, cmd ) =
+        handleInit : (subModel -> Page) -> (msg -> Msg) -> ( subModel, Cmd msg ) -> ( Model, Cmd Msg )
+        handleInit constr toMsg ( subModel, cmd ) =
             ( { model | page = constr subModel }
             , Cmd.map toMsg cmd
             )
+
+        handleUpdate : (subModel -> Page) -> (msg -> Msg) -> ( subModel, Cmd msg, Maybe evt ) -> (evt -> ( Model, Cmd Msg )) -> ( Model, Cmd Msg )
+        handleUpdate constr toMsg ( subModel, cmd, mEvt ) handleEvent =
+            case mEvt of
+                Nothing ->
+                    ( { model | page = constr subModel }
+                    , Cmd.map toMsg cmd
+                    )
+
+                Just evt ->
+                    let
+                        ( newModel, cmd1 ) =
+                            handleEvent evt
+                    in
+                    ( { newModel | page = constr subModel }
+                    , Cmd.batch
+                        [ Cmd.map toMsg cmd
+                        , cmd1
+                        ]
+                    )
     in
     case ( model.page, msg ) of
         ( _, UrlRequested urlRequest ) ->
@@ -72,13 +92,13 @@ update msg model =
                     ( { model | page = Page.NotFound }, Cmd.none )
 
                 Just Home ->
-                    inner Page.Home HomeMsg Page.Home.init
+                    handleInit Page.Home HomeMsg Page.Home.init
 
                 Just (Profile _) ->
                     Debug.todo "profile"
 
         ( Page.Home subModel, HomeMsg subMsg ) ->
-            inner Page.Home HomeMsg (Page.Home.update subMsg subModel)
+            handleUpdate Page.Home HomeMsg (Page.Home.update subMsg subModel) never
 
         _ ->
             ( model, Cmd.none )

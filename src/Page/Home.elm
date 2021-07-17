@@ -6,41 +6,56 @@ module Page.Home exposing
     , view
     )
 
-import Api
+import Api exposing (Response)
 import Api.Tags
+import App
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Http
+import Ports
 import Process
 import Task
 
 
 type alias Model =
-    Int
+    { tags : Maybe (List String)
+    }
 
 
 type Msg
-    = Noop
-    | GotResponse (Result Http.Error (Api.Response (List String)))
+    = GotTags (Api.Response (List String))
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( 0
+    ( { tags = Nothing
+      }
     , Cmd.batch
-        [ Process.sleep 1000 |> Task.perform (\_ -> Noop)
+        [ Api.Tags.get |> Api.send GotTags
         ]
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd Msg, Maybe Never )
 update msg model =
     case msg of
-        Noop ->
-            ( model + 1, Cmd.none )
+        GotTags res ->
+            case res of
+                Ok tags ->
+                    App.pure { model | tags = Just tags }
 
-        GotResponse _ ->
-            ( model, Cmd.none )
+                Err _ ->
+                    App.pure model
+                        |> App.withCmd (Ports.logError "tags response error")
+
+
+viewTagPill : String -> Html msg
+viewTagPill tag =
+    a
+        [ A.href "" -- TODO route on tag
+        , class "tag-pill tag-default"
+        ]
+        [ text tag ]
 
 
 view : Model -> Html Msg
@@ -196,58 +211,16 @@ view model =
                             ]
                         ]
                     ]
-                , div
-                    [ class "col-md-3"
-                    ]
-                    [ div
-                        [ class "sidebar"
-                        ]
-                        [ p []
-                            [ text "Popular Tags" ]
-                        , div
-                            [ class "tag-list"
-                            ]
-                            [ a
-                                [ A.href ""
-                                , class "tag-pill tag-default"
-                                ]
-                                [ text "programming" ]
-                            , a
-                                [ A.href ""
-                                , class "tag-pill tag-default"
-                                ]
-                                [ text "javascript" ]
-                            , a
-                                [ A.href ""
-                                , class "tag-pill tag-default"
-                                ]
-                                [ text "emberjs" ]
-                            , a
-                                [ A.href ""
-                                , class "tag-pill tag-default"
-                                ]
-                                [ text "angularjs" ]
-                            , a
-                                [ A.href ""
-                                , class "tag-pill tag-default"
-                                ]
-                                [ text "react" ]
-                            , a
-                                [ A.href ""
-                                , class "tag-pill tag-default"
-                                ]
-                                [ text "mean" ]
-                            , a
-                                [ A.href ""
-                                , class "tag-pill tag-default"
-                                ]
-                                [ text "node" ]
-                            , a
-                                [ A.href ""
-                                , class "tag-pill tag-default"
-                                ]
-                                [ text "rails" ]
-                            ]
+                , div [ class "col-md-3" ]
+                    [ div [ class "sidebar" ]
+                        [ p [] [ text "Popular Tags" ]
+                        , case model.tags of
+                            Nothing ->
+                                text "Loading tags"
+
+                            Just tags ->
+                                div [ class "tag-list" ]
+                                    (tags |> List.map viewTagPill)
                         ]
                     ]
                 ]

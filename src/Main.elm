@@ -7,6 +7,7 @@ import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Page exposing (Page)
 import Page.Home
+import Page.NotFound
 import Route as Route exposing (Route(..))
 import Url
 
@@ -88,11 +89,32 @@ subscriptions _ =
     Sub.none
 
 
+viewMain : Model -> ( Maybe String, Html Msg )
+viewMain model =
+    case model.page of
+        Page.Home subModel ->
+            ( Nothing, text "home" )
+
+        Page.NotFound ->
+            ( Just "Not found", Page.NotFound.view )
+
+
 view : Model -> Browser.Document Msg
-view _ =
-    { title = "Application Title"
+view model =
+    let
+        ( mTitle, body ) =
+            viewMain model
+    in
+    { title =
+        case mTitle of
+            Nothing ->
+                "Conduit"
+
+            Just title ->
+                title ++ " | Conduit"
     , body =
         [ viewNav
+        , body
         , viewFooter
         ]
     }

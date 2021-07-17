@@ -93,7 +93,7 @@ viewMain : Model -> ( Maybe String, Html Msg )
 viewMain model =
     case model.page of
         Page.Home subModel ->
-            ( Nothing, text "home" )
+            ( Nothing, Html.map HomeMsg <| Page.Home.view subModel )
 
         Page.NotFound ->
             ( Just "Not found", Page.NotFound.view )

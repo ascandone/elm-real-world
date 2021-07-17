@@ -3,8 +3,10 @@ module Main exposing (..)
 import Browser
 import Browser.Dom exposing (Error(..))
 import Browser.Navigation as Nav
+import Data.User as User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
+import Json.Decode exposing (decodeString)
 import Page exposing (Page)
 import Page.Home
 import Page.NotFound
@@ -27,17 +29,22 @@ main =
 type alias Model =
     { key : Nav.Key
     , page : Page
+    , mUser : Maybe User
     }
 
 
 type alias Flags =
-    ()
+    { user : Maybe String
+    }
 
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url key =
+init flags url key =
     { key = key
     , page = Page.NotFound
+    , mUser =
+        flags.user
+            |> Maybe.andThen (decodeString User.decoder >> Result.toMaybe)
     }
         |> update (UrlChanged url)
 

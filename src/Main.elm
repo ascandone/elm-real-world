@@ -9,6 +9,7 @@ import Html.Attributes as A exposing (class)
 import Json.Decode exposing (decodeString)
 import Page exposing (Page)
 import Page.Home
+import Page.Login
 import Page.NotFound
 import Route as Route exposing (Route(..))
 import Url
@@ -54,6 +55,7 @@ type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url.Url
     | HomeMsg Page.Home.Msg
+    | LoginMsg Page.Login.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -104,14 +106,27 @@ update msg model =
                 Nothing ->
                     ( { model | page = Page.NotFound }, Cmd.none )
 
-                Just Home ->
+                Just Route.Home ->
                     handleInit Page.Home HomeMsg Page.Home.init
 
+                Just Route.Login ->
+                    handleInit Page.Login LoginMsg Page.Login.init
+
                 _ ->
-                    Debug.todo "profile"
+                    Debug.todo "route"
 
         ( Page.Home subModel, HomeMsg subMsg ) ->
-            handleUpdate Page.Home HomeMsg (Page.Home.update subMsg subModel) never
+            handleUpdate
+                Page.Home
+                HomeMsg
+                (Page.Home.update subMsg subModel)
+                never
+
+        ( Page.Login subModel, LoginMsg subMsg ) ->
+            handleUpdate Page.Login
+                LoginMsg
+                (Page.Login.update subMsg subModel)
+                (\(Page.Login.SubmitForm form) -> ( model, Cmd.none ))
 
         _ ->
             ( model, Cmd.none )
@@ -127,6 +142,9 @@ viewMain model =
     case model.page of
         Page.Home subModel ->
             ( Nothing, Html.map HomeMsg <| Page.Home.view model subModel )
+
+        Page.Login subModel ->
+            ( Just "Login", Html.map LoginMsg <| Page.Login.view subModel )
 
         Page.NotFound ->
             ( Just "Not found", Page.NotFound.view )

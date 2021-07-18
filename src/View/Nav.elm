@@ -28,8 +28,8 @@ navItem to_ children current =
     li [ class "nav-item" ]
         [ a
             [ class "nav-link active"
-            , A.classList [ ( "active", isLinkActive to_ current ) ] -- TODO active?
-            , A.href ""
+            , A.classList [ ( "active", isLinkActive to_ current ) ]
+            , A.href (Route.toHref to_)
             ]
             children
         ]
@@ -49,7 +49,7 @@ view_ mUser page =
                     navItem Route.Home [ text "Home" ]
                         :: (case mUser of
                                 Nothing ->
-                                    [ navItem Route.Home [ text "Sign in" ]
+                                    [ navItem Route.Login [ text "Sign in" ]
                                     , navItem Route.Home [ text "Sign up" ]
                                     ]
 

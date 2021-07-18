@@ -2,6 +2,7 @@ module Api.Articles.Feed exposing (get, limit, offset)
 
 import Api.Internal
 import Data.Article as Article
+import Data.User exposing (User)
 import Url.Builder as Builder exposing (QueryParameter)
 
 
@@ -24,7 +25,8 @@ toParams =
     List.map (\(Param p) -> p)
 
 
-get : List Param -> Api.Internal.Request Article.Collection
-get params =
+get : User -> List Param -> Api.Internal.Request Article.Collection
+get user params =
     Api.Internal.get Article.decoderCollection [ "articles", "feed" ]
         |> Api.Internal.withParams (toParams params)
+        |> Api.Internal.withAuth user

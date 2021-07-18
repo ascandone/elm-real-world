@@ -12,6 +12,7 @@ import Page.Home
 import Page.NotFound
 import Route as Route exposing (Route(..))
 import Url
+import View.Nav
 
 
 main : Program Flags Model Msg
@@ -145,79 +146,11 @@ view model =
             Just title ->
                 title ++ " | Conduit"
     , body =
-        [ viewNav
+        [ View.Nav.view model
         , body
         , viewFooter
         ]
     }
-
-
-viewNav : Html msg
-viewNav =
-    nav
-        [ class "navbar navbar-light"
-        ]
-        [ div
-            [ class "container"
-            ]
-            [ a
-                [ class "navbar-brand"
-                , A.href "index.html"
-                ]
-                [ text "conduit" ]
-            , ul
-                [ class "nav navbar-nav pull-xs-right"
-                ]
-                [ li
-                    [ class "nav-item"
-                    ]
-                    [ {- Add "active" class when you're on that page" -}
-                      a
-                        [ class "nav-link active"
-                        , A.href ""
-                        ]
-                        [ text "Home" ]
-                    ]
-                , li
-                    [ class "nav-item"
-                    ]
-                    [ a
-                        [ class "nav-link"
-                        , A.href ""
-                        ]
-                        [ i
-                            [ class "ion-compose"
-                            ]
-                            []
-                        , text "New Post"
-                        ]
-                    ]
-                , li
-                    [ class "nav-item"
-                    ]
-                    [ a
-                        [ class "nav-link"
-                        , A.href ""
-                        ]
-                        [ i
-                            [ class "ion-gear-a"
-                            ]
-                            []
-                        , text "Settings"
-                        ]
-                    ]
-                , li
-                    [ class "nav-item"
-                    ]
-                    [ a
-                        [ class "nav-link"
-                        , A.href ""
-                        ]
-                        [ text "Sign up" ]
-                    ]
-                ]
-            ]
-        ]
 
 
 viewFooter : Html msg

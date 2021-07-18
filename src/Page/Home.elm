@@ -8,6 +8,7 @@ module Page.Home exposing
 
 import Api exposing (Response)
 import Api.Articles
+import Api.Articles.Feed
 import Api.Tags
 import App
 import Data.Article as Article exposing (Article, Collection)
@@ -88,8 +89,11 @@ fetchArticles ( model, cmd, evt ) =
                             , Api.Articles.tag tag
                             ]
 
-                    _ ->
-                        Debug.todo "feed"
+                    YourFeed user ->
+                        Api.Articles.Feed.get user
+                            [ Api.Articles.Feed.limit data.limit
+                            , Api.Articles.Feed.offset data.offset
+                            ]
     in
     ( model, Cmd.batch [ cmd, fetchCmd ], evt )
 

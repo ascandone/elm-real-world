@@ -9,8 +9,10 @@ module Page.Home exposing
 import Api exposing (Response)
 import Api.Tags
 import App
+import Data.User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
+import Html.Events as E
 import Http
 import Ports
 import Process
@@ -20,9 +22,9 @@ import View.NavPills
 
 
 type FeedType
-    = YourFeed
+    = YourFeed User
     | GlobalFeed
-    | Tag String
+    | TagFeed String
 
 
 type alias Model =
@@ -60,21 +62,26 @@ update msg model =
                     App.pure model
                         |> App.withCmd (Ports.logError "tags response error")
 
+        SelectedFeed feed ->
+            -- TODO fetch
+            App.pure { model | feed = feed }
+
         _ ->
             App.pure model
 
 
-viewTagPill : String -> Html msg
+viewTagPill : String -> Html Msg
 viewTagPill tag =
     a
         [ A.href "" -- TODO route on tag
         , class "tag-pill tag-default"
+        , E.onClick (SelectedFeed (TagFeed tag))
         ]
         [ text tag ]
 
 
-view : Model -> Html Msg
-view model =
+view : { r | mUser : Maybe User } -> Model -> Html Msg
+view { mUser } model =
     div
         [ class "home-page"
         ]
@@ -104,16 +111,20 @@ view model =
                     [ div
                         [ class "feed-toggle"
                         ]
-                        [ let
-                            data =
-                                [ Just { item = GlobalFeed, text = "Global Feed" }
-                                ]
-                                    |> List.filterMap identity
-                          in
-                          View.NavPills.view
+                        [ View.NavPills.view
                             model.feed
                             { onSelected = SelectedFeed }
-                            [ { item = GlobalFeed, text = "Global Feed" } ]
+                            ([ mUser |> Maybe.map (\u -> { item = YourFeed u, text = "Your Feed" })
+                             , Just { item = GlobalFeed, text = "Global Feed" }
+                             , case model.feed of
+                                (TagFeed t) as f ->
+                                    Just { item = f, text = "#" ++ t }
+
+                                _ ->
+                                    Nothing
+                             ]
+                                |> List.filterMap identity
+                            )
                         ]
                     , View.ArticlePreview.view
                         { onToggleFavorite = Noop }

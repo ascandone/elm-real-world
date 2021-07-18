@@ -46,7 +46,7 @@ toParams =
     List.map (\(Param p) -> p)
 
 
-get : List Param -> Api.Internal.Request (List Article)
+get : List Param -> Api.Internal.Request Article.Collection
 get params =
-    Api.Internal.get Article.decoderMultiple [ "articles" ]
+    Api.Internal.get Article.decoderCollection [ "articles" ]
         |> Api.Internal.withParams (toParams params)

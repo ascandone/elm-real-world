@@ -1,7 +1,7 @@
-module Data.Article exposing (Article, decoderMultiple, decoderSingle)
+module Data.Article exposing (Article, Collection, decoderCollection, decoderSingle)
 
 import Data.Profile as Profile exposing (Profile)
-import Json.Decode exposing (Decoder, bool, field, int, list, string, succeed)
+import Json.Decode exposing (Decoder, bool, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (required)
 
 
@@ -36,9 +36,18 @@ decoder =
 
 decoderSingle : Decoder Article
 decoderSingle =
-    field "article" decoder
+    succeed identity
+        |> required "article" decoder
 
 
-decoderMultiple : Decoder (List Article)
-decoderMultiple =
-    field "articles" (list decoder)
+type alias Collection =
+    { articles : List Article
+    , articlesCount : Int
+    }
+
+
+decoderCollection : Decoder Collection
+decoderCollection =
+    succeed Collection
+        |> required "articles" (list decoder)
+        |> required "articlesCount" int

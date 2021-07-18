@@ -1,7 +1,7 @@
 module Data.User exposing (User, decoder)
 
 import Json.Decode as Dec exposing (Decoder, string)
-import Json.Decode.Pipeline exposing (optional, required)
+import Json.Decode.Pipeline exposing (required)
 import Misc exposing (optionalMaybe)
 
 

@@ -1,7 +1,7 @@
 module Misc exposing (..)
 
 import Json.Decode exposing (Decoder)
-import Json.Decode.Pipeline exposing (optional, required)
+import Json.Decode.Pipeline exposing (optional)
 
 
 defaultImage : Maybe String -> String

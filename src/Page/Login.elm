@@ -74,7 +74,7 @@ view { form } =
         [ div [ class "container page" ]
             [ div [ class "row" ]
                 [ div [ class "col-md-6 offset-md-3 col-xs-12" ]
-                    [ h1 [ class "text-xs-center" ] [ text "Sign up" ]
+                    [ h1 [ class "text-xs-center" ] [ text "Sign in" ]
                     , p [ class "text-xs-center" ]
                         --TODO link
                         [ a [ A.href "" ] [ text "Have an account?" ] ]
@@ -110,7 +110,7 @@ view { form } =
                                 ]
                             , button
                                 [ A.type_ "submit", class "btn btn-lg btn-primary pull-xs-right" ]
-                                [ text "Sign up" ]
+                                [ text "Sign in" ]
                             ]
                     ]
                 ]

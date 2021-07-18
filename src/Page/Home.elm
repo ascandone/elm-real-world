@@ -7,18 +7,22 @@ module Page.Home exposing
     )
 
 import Api exposing (Response)
+import Api.Articles
 import Api.Tags
 import App
+import Data.Article as Article exposing (Article, Collection)
 import Data.User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events as E
+import Html.Lazy exposing (lazy2)
 import Http
 import Ports
 import Process
 import Task
 import View.ArticlePreview
 import View.NavPills
+import View.Pagination exposing (Pagination)
 
 
 type FeedType
@@ -29,25 +33,65 @@ type FeedType
 
 type alias Model =
     { tags : Maybe (List String)
-    , feed : FeedType
+    , articles : Maybe (Api.Response Article.Collection)
+    , feedType : FeedType
+    , pagination : Pagination
     }
 
 
 type Msg
     = GotTags (Api.Response (List String))
+    | GotArticles (Api.Response Article.Collection)
     | SelectedFeed FeedType
-    | Noop
+    | ToggleFavoriteArticle Article
+    | SelectedPagination Pagination
+
+
+initialPagination : Pagination
+initialPagination =
+    View.Pagination.init { pageSize = 10 }
 
 
 init : ( Model, Cmd Msg )
 init =
     ( { tags = Nothing
-      , feed = GlobalFeed
+      , feedType = GlobalFeed
+      , pagination = initialPagination
+      , articles = Nothing
       }
     , Cmd.batch
         [ Api.Tags.get |> Api.send GotTags
+        , Api.Articles.get [] |> Api.send GotArticles
         ]
     )
+
+
+fetchArticles : ( Model, Cmd Msg, evt ) -> ( Model, Cmd Msg, evt )
+fetchArticles ( model, cmd, evt ) =
+    let
+        data =
+            View.Pagination.getData model.pagination
+
+        fetchCmd =
+            Api.send GotArticles <|
+                case model.feedType of
+                    GlobalFeed ->
+                        Api.Articles.get
+                            [ Api.Articles.limit data.limit
+                            , Api.Articles.offset data.offset
+                            ]
+
+                    TagFeed tag ->
+                        Api.Articles.get
+                            [ Api.Articles.limit data.limit
+                            , Api.Articles.offset data.offset
+                            , Api.Articles.tag tag
+                            ]
+
+                    _ ->
+                        Debug.todo "feed"
+    in
+    ( model, Cmd.batch [ cmd, fetchCmd ], evt )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg, Maybe Never )
@@ -62,12 +106,29 @@ update msg model =
                     App.pure model
                         |> App.withCmd (Ports.logError "tags response error")
 
-        SelectedFeed feed ->
-            -- TODO fetch
-            App.pure { model | feed = feed }
+        GotArticles res ->
+            -- TODO handle err
+            let
+                ret =
+                    App.pure { model | articles = Just res }
+            in
+            case res of
+                Err e ->
+                    ret |> App.withCmd (Ports.logError (Debug.toString e))
 
-        _ ->
-            App.pure model
+                _ ->
+                    ret
+
+        SelectedFeed feed ->
+            App.pure { model | feedType = feed, pagination = initialPagination }
+                |> fetchArticles
+
+        SelectedPagination pagination ->
+            App.pure { model | pagination = pagination }
+                |> fetchArticles
+
+        ToggleFavoriteArticle _ ->
+            Debug.todo "toggleFavorite"
 
 
 viewTagPill : String -> Html Msg
@@ -80,70 +141,68 @@ viewTagPill tag =
         [ text tag ]
 
 
+viewBanner : Html msg
+viewBanner =
+    div [ class "banner" ]
+        [ div [ class "container" ]
+            [ h1 [ class "logo-font" ] [ text "conduit" ]
+            , p [] [ text "A place to share your knowledge." ]
+            ]
+        ]
+
+
+viewFeedToggle : Maybe User -> FeedType -> Html Msg
+viewFeedToggle mUser feed =
+    div [ class "feed-toggle" ]
+        [ View.NavPills.view
+            feed
+            { onSelected = SelectedFeed }
+            ([ mUser |> Maybe.map (\u -> { item = YourFeed u, text = "Your Feed" })
+             , Just { item = GlobalFeed, text = "Global Feed" }
+             , case feed of
+                (TagFeed t) as f ->
+                    Just { item = f, text = "#" ++ t }
+
+                _ ->
+                    Nothing
+             ]
+                |> List.filterMap identity
+            )
+        ]
+
+
 view : { r | mUser : Maybe User } -> Model -> Html Msg
 view { mUser } model =
-    div
-        [ class "home-page"
-        ]
-        [ div
-            [ class "banner"
-            ]
-            [ div
-                [ class "container"
-                ]
-                [ h1
-                    [ class "logo-font"
-                    ]
-                    [ text "conduit" ]
-                , p []
-                    [ text "A place to share your knowledge." ]
-                ]
-            ]
-        , div
-            [ class "container page"
-            ]
-            [ div
-                [ class "row"
-                ]
-                [ div
-                    [ class "col-md-9"
-                    ]
-                    [ div
-                        [ class "feed-toggle"
-                        ]
-                        [ View.NavPills.view
-                            model.feed
-                            { onSelected = SelectedFeed }
-                            ([ mUser |> Maybe.map (\u -> { item = YourFeed u, text = "Your Feed" })
-                             , Just { item = GlobalFeed, text = "Global Feed" }
-                             , case model.feed of
-                                (TagFeed t) as f ->
-                                    Just { item = f, text = "#" ++ t }
+    div [ class "home-page" ]
+        [ viewBanner
+        , div [ class "container page" ]
+            [ div [ class "row" ]
+                [ div [ class "col-md-9" ]
+                    [ lazy2 viewFeedToggle mUser model.feedType
+                    , div [] <|
+                        case model.articles of
+                            Nothing ->
+                                [ text "Loading.." ]
 
-                                _ ->
-                                    Nothing
-                             ]
-                                |> List.filterMap identity
-                            )
-                        ]
-                    , View.ArticlePreview.view
-                        { onToggleFavorite = Noop }
-                        { slug = "String"
-                        , title = "String"
-                        , description = "String"
-                        , body = "String"
-                        , tagList = [ "String" ]
-                        , createdAt = "String"
-                        , updatedAt = "String"
-                        , favorited = True
-                        , favoritesCount = 32
-                        , author =
-                            { username = "String"
-                            , bio = "String"
-                            , image = Nothing
-                            , following = True
-                            }
-                        }
+                            Just (Err _) ->
+                                [ text "error." ]
+
+                            Just (Ok collection) ->
+                                List.concat
+                                    [ List.map
+                                        (\article ->
+                                            View.ArticlePreview.view
+                                                { onToggleFavorite = ToggleFavoriteArticle article }
+                                                article
+                                        )
+                                        collection.articles
+                                    , [ View.Pagination.view
+                                            { articlesCount = collection.articlesCount
+                                            , pagination = model.pagination
+                                            , onSelected = SelectedPagination
+                                            }
+                                      ]
+                                    ]
                     ]
                 , div [ class "col-md-3" ]
                     [ div [ class "sidebar" ]

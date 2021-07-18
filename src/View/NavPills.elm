@@ -20,7 +20,7 @@ view active { onSelected } items =
                             , onClick (onSelected data.item)
                             , A.classList [ ( "active", data.item == active ) ]
                             ]
-                            [ text ("#" ++ data.text) ]
+                            [ text data.text ]
                         ]
                 )
         )

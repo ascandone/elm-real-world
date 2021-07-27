@@ -30,16 +30,20 @@ decoder =
 encode : User -> Value
 encode user =
     Enc.object
-        [ ( "email", Enc.string user.email )
-        , ( "token", Enc.string user.token )
-        , ( "username", Enc.string user.username )
-        , ( "bio", Enc.string user.bio )
-        , ( "image"
-          , case user.image of
-                Nothing ->
-                    Enc.null
+        [ ( "user"
+          , Enc.object
+                [ ( "email", Enc.string user.email )
+                , ( "token", Enc.string user.token )
+                , ( "username", Enc.string user.username )
+                , ( "bio", Enc.string user.bio )
+                , ( "image"
+                  , case user.image of
+                        Nothing ->
+                            Enc.null
 
-                Just str ->
-                    Enc.string str
+                        Just str ->
+                            Enc.string str
+                  )
+                ]
           )
         ]

@@ -99,6 +99,7 @@ view ({ form } as model) =
                             text ""
 
                         Just _ ->
+                            --TODO show errs
                             ul [ class "error-messages" ] [ li [] [ text "That email is already taken" ] ]
                     , Html.form [ E.onSubmit Submit ] <|
                         List.map (Html.map OnInput)

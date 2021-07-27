@@ -17,7 +17,28 @@ isLinkActive : Route -> Page -> Bool
 isLinkActive route page =
     case ( route, page ) of
         ( Route.Home, Page.Home _ ) ->
-            False
+            True
+
+        ( Route.Login, Page.Login _ ) ->
+            True
+
+        ( Route.Register, Page.Register ) ->
+            True
+
+        ( Route.Settings, Page.Settings ) ->
+            True
+
+        ( Route.NewPost, Page.NewPost ) ->
+            True
+
+        ( Route.Editor _, Page.Editor ) ->
+            True
+
+        ( Route.ViewArticle _, Page.Article ) ->
+            True
+
+        ( Route.Profile _, Page.Profile ) ->
+            True
 
         _ ->
             False
@@ -41,7 +62,7 @@ view_ mUser page =
         [ div [ class "container" ]
             [ a
                 [ class "navbar-brand"
-                , A.href "index.html"
+                , A.href (Route.toHref Route.Home)
                 ]
                 [ text "conduit" ]
             , ul [ class "nav navbar-nav pull-xs-right" ]
@@ -50,23 +71,22 @@ view_ mUser page =
                         :: (case mUser of
                                 Nothing ->
                                     [ navItem Route.Login [ text "Sign in" ]
-                                    , navItem Route.Home [ text "Sign up" ]
+                                    , navItem Route.Register [ text "Sign up" ]
                                     ]
 
                                 Just u ->
-                                    [ navItem Route.Home
+                                    [ navItem Route.NewPost
                                         [ i [ class "ion-compose" ] []
                                         , text "New Post"
                                         ]
-                                    , navItem Route.Home
+                                    , navItem Route.Settings
                                         [ i [ class "ion-gear-a" ] []
                                         , text "Settings"
                                         ]
-                                    , navItem Route.Home
+                                    , navItem (Route.Profile u.username)
                                         [ img [ A.src <| Misc.defaultImage u.image ] []
-                                        , text "Home"
+                                        , text u.username
                                         ]
-                                    , navItem Route.Home [ text "Sign out" ]
                                     ]
                            )
                 )

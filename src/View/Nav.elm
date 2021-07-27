@@ -84,7 +84,7 @@ view_ mUser page =
                                         , text "Settings"
                                         ]
                                     , navItem (Route.Profile u.username)
-                                        [ img [ A.src <| Misc.defaultImage u.image ] []
+                                        [ img [ class "user-pic", A.src <| Misc.defaultImage u.image ] []
                                         , text u.username
                                         ]
                                     ]

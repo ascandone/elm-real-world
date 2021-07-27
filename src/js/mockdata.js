@@ -20,6 +20,13 @@ export const tags = [
   "dragons",
   "butt",
 ];
+export const user = {
+  email: "jake@jake.jake",
+  token: "jwt.token.here",
+  username: "jake",
+  bio: "I work at statefarm",
+  image: null,
+};
 
 export const articles = {
   articles: [

@@ -1,5 +1,5 @@
 import { createServer, Model } from "miragejs";
-import { articles, tags } from "./mockdata";
+import { articles, tags, user } from "./mockdata";
 
 createServer({
   models: {
@@ -11,17 +11,10 @@ createServer({
     this.namespace = "api";
 
     this.get("/articles", () => articles);
+    this.get("/articles/feed", () => articles);
 
     this.get("/tags", () => ({ tags }));
 
-    this.post("/users/login", () => ({
-      user: {
-        email: "jake@jake.jake",
-        token: "jwt.token.here",
-        username: "jake",
-        bio: "I work at statefarm",
-        image: null,
-      },
-    }));
+    this.post("/users/login", () => ({ user }));
   },
 });

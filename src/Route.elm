@@ -8,8 +8,12 @@ type Route
     = Home
     | Profile String
     | Login
+    | Register
     | ViewArticle String
     | ViewProfile String
+    | NewPost
+    | Editor String
+    | Settings
 
 
 toHref : Route -> String
@@ -21,6 +25,9 @@ toHref route =
         Login ->
             "#/login"
 
+        Register ->
+            "#/register"
+
         Profile username ->
             "#/profile/" ++ username
 
@@ -29,6 +36,15 @@ toHref route =
 
         ViewProfile username ->
             "#/profile/" ++ username
+
+        NewPost ->
+            "#/editor"
+
+        Editor slug ->
+            "#/editor/" ++ slug
+
+        Settings ->
+            "#/settings"
 
 
 parser : Parser (Route -> a) a

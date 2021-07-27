@@ -164,6 +164,24 @@ viewMain model =
         Page.Login subModel ->
             ( Just "Login", Html.map LoginMsg <| Page.Login.view subModel )
 
+        Page.Register ->
+            Debug.todo "page view"
+
+        Page.Settings ->
+            Debug.todo "page view"
+
+        Page.NewPost ->
+            Debug.todo "page view"
+
+        Page.Editor ->
+            Debug.todo "page view"
+
+        Page.Article ->
+            Debug.todo "page view"
+
+        Page.Profile ->
+            Debug.todo "page view"
+
         Page.NotFound ->
             ( Just "Not found", Page.NotFound.view )
 

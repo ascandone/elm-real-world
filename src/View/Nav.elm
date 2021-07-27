@@ -48,7 +48,7 @@ navItem : Route -> List (Html msg) -> Page -> Html msg
 navItem to_ children current =
     li [ class "nav-item" ]
         [ a
-            [ class "nav-link active"
+            [ class "nav-link"
             , A.classList [ ( "active", isLinkActive to_ current ) ]
             , A.href (Route.toHref to_)
             ]

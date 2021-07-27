@@ -147,7 +147,7 @@ update msg model =
                 LoginMsg
                 (Page.Login.update subMsg subModel)
                 (\(Page.Login.LoggedIn user) ->
-                    ( model
+                    ( { model | mUser = Just user }
                     , Cmd.batch
                         [ Ports.serializeUser <| Enc.encode 2 (User.encode user)
                         , Nav.pushUrl model.key (Route.toHref Route.Home)

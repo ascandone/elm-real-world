@@ -13,6 +13,5 @@ const app = Elm.Main.init({
 app.ports.logError.subscribe(console.error);
 
 app.ports.serializeUser.subscribe((user) => {
-  // localStorage.setItem(USER_NS, user);
-  console.log("localStorage", user);
+  localStorage.setItem(USER_NS, user);
 });

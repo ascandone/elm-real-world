@@ -7,10 +7,12 @@ import Data.User as User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Json.Decode exposing (decodeString)
+import Json.Encode as Enc
 import Page exposing (Page)
 import Page.Home
 import Page.Login
 import Page.NotFound
+import Ports
 import Route as Route exposing (Route(..))
 import Url
 import View.Nav
@@ -144,7 +146,14 @@ update msg model =
             handleUpdate Page.Login
                 LoginMsg
                 (Page.Login.update subMsg subModel)
-                (\(Page.Login.LoggedIn user) -> ( model, Cmd.none ))
+                (\(Page.Login.LoggedIn user) ->
+                    ( model
+                    , Cmd.batch
+                        [ Ports.serializeUser <| Enc.encode 2 (User.encode user)
+                        , Nav.pushUrl model.key (Route.toHref Route.Home)
+                        ]
+                    )
+                )
 
         _ ->
             ( model, Cmd.none )

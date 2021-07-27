@@ -12,8 +12,16 @@ createServer({
 
     this.get("/articles", () => articles);
 
-    this.get("/tags", function (server, req) {
-      return { tags };
-    });
+    this.get("/tags", () => ({ tags }));
+
+    this.post("/users/login", () => ({
+      user: {
+        email: "jake@jake.jake",
+        token: "jwt.token.here",
+        username: "jake",
+        bio: "I work at statefarm",
+        image: null,
+      },
+    }));
   },
 });

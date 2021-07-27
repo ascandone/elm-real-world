@@ -6,21 +6,19 @@ module Page.Home exposing
     , view
     )
 
-import Api exposing (Response)
+import Api
 import Api.Articles
 import Api.Articles.Feed
 import Api.Tags
 import App
-import Data.Article as Article exposing (Article, Collection)
+import Data.Article as Article exposing (Article)
 import Data.User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events as E
 import Html.Lazy exposing (lazy2)
-import Http
+import Misc exposing (jumpToTop)
 import Ports
-import Process
-import Task
 import View.ArticlePreview
 import View.NavPills
 import View.Pagination exposing (Pagination)
@@ -46,6 +44,7 @@ type Msg
     | SelectedFeed FeedType
     | ToggleFavoriteArticle Article
     | SelectedPagination Pagination
+    | SetViewport
 
 
 initialPagination : Pagination
@@ -101,6 +100,9 @@ fetchArticles ( model, cmd, evt ) =
 update : Msg -> Model -> ( Model, Cmd Msg, Maybe Never )
 update msg model =
     case msg of
+        SetViewport ->
+            App.pure model
+
         GotTags res ->
             case res of
                 Ok tags ->
@@ -122,6 +124,7 @@ update msg model =
 
                 _ ->
                     ret
+                        |> App.withCmd (jumpToTop SetViewport)
 
         SelectedFeed feed ->
             App.pure { model | feedType = feed, pagination = initialPagination }

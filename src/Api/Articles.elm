@@ -8,7 +8,7 @@ module Api.Articles exposing
     )
 
 import Api.Internal
-import Data.Article as Article exposing (Article)
+import Data.Article as Article
 import Url.Builder as Builder exposing (QueryParameter)
 
 

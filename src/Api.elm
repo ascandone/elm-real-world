@@ -1,6 +1,7 @@
 module Api exposing
     ( ApiError
     , Response
+    , ResponseErr(..)
     , send
     )
 

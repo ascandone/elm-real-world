@@ -144,7 +144,7 @@ update msg model =
             handleUpdate Page.Login
                 LoginMsg
                 (Page.Login.update subMsg subModel)
-                (\(Page.Login.SubmitForm form) -> ( model, Cmd.none ))
+                (\(Page.Login.LoggedIn user) -> ( model, Cmd.none ))
 
         _ ->
             ( model, Cmd.none )

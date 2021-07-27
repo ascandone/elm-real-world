@@ -7,7 +7,10 @@ module Page.Login exposing
     , view
     )
 
+import Api
+import Api.Users.Login
 import App
+import Data.User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events as E
@@ -15,7 +18,7 @@ import Route
 
 
 type Event
-    = SubmitForm Form
+    = LoggedIn User
 
 
 type alias Form =
@@ -26,7 +29,7 @@ type alias Form =
 
 type alias Model =
     { form : Form
-    , error : Maybe String
+    , error : Maybe Api.ResponseErr
     }
 
 
@@ -42,6 +45,7 @@ init =
 type Msg
     = OnInput Form
     | Submit
+    | GotUser (Api.Response User)
 
 
 
@@ -62,10 +66,23 @@ update msg model =
         Submit ->
             if validateForm model.form then
                 App.pure model
-                    |> App.withEvt (SubmitForm model.form)
+                    |> App.withCmd (Api.Users.Login.post model.form |> Api.send GotUser)
 
             else
                 App.pure model
+
+        GotUser result ->
+            case result of
+                Err error ->
+                    App.pure { model | error = Just error }
+
+                Ok user ->
+                    if validateForm model.form then
+                        App.pure model
+                            |> App.withEvt (LoggedIn user)
+
+                    else
+                        App.pure model
 
 
 view : Model -> Html Msg

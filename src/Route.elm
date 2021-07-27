@@ -53,6 +53,12 @@ parser =
         [ map Home top
         , map Profile <| s "profile" </> string
         , map Login <| s "login"
+        , map Register <| s "register"
+        , map ViewArticle <| s "article" </> string
+        , map ViewProfile <| s "profile" </> string
+        , map NewPost <| s "editor"
+        , map Editor <| s "editor" </> string
+        , map Settings <| s "settings"
         ]
 
 

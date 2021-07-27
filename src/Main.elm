@@ -112,8 +112,26 @@ update msg model =
                 Just Route.Login ->
                     handleInit Page.Login LoginMsg Page.Login.init
 
-                _ ->
-                    Debug.todo "route"
+                Just Register ->
+                    Debug.todo "register"
+
+                Just (Profile username) ->
+                    Debug.todo "profile"
+
+                Just (ViewArticle slug) ->
+                    Debug.todo "viewArticle"
+
+                Just (ViewProfile username) ->
+                    Debug.todo "profile"
+
+                Just NewPost ->
+                    Debug.todo "newpost"
+
+                Just (Editor slug) ->
+                    Debug.todo "editor"
+
+                Just Settings ->
+                    Debug.todo "settings"
 
         ( Page.Home subModel, HomeMsg subMsg ) ->
             handleUpdate

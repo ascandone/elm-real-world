@@ -1,4 +1,4 @@
-module Page.Login exposing
+module Page.Register exposing
     ( Event(..)
     , Model
     , Msg
@@ -11,7 +11,6 @@ import App
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events as E
-import Route
 
 
 type Event
@@ -21,6 +20,7 @@ type Event
 type alias Form =
     { email : String
     , password : String
+    , username : String
     }
 
 
@@ -32,7 +32,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { form = Form "" ""
+    ( { form = Form "" "" ""
       , error = Nothing
       }
     , Cmd.none
@@ -69,23 +69,28 @@ update msg model =
 
 
 view : Model -> Html Msg
-view ({ form } as model) =
+view { form } =
     div [ class "auth-page" ]
         [ div [ class "container page" ]
             [ div [ class "row" ]
                 [ div [ class "col-md-6 offset-md-3 col-xs-12" ]
                     [ h1 [ class "text-xs-center" ] [ text "Sign in" ]
                     , p [ class "text-xs-center" ]
-                        [ a [ A.href (Route.toHref Route.Register) ] [ text "Need an account?" ] ]
-                    , case model.error of
-                        Nothing ->
-                            text ""
-
-                        Just _ ->
-                            ul [ class "error-messages" ] [ li [] [ text "That email is already taken" ] ]
+                        --TODO link
+                        [ a [ A.href "" ] [ text "Have an account?" ] ]
+                    , ul [ class "error-messages" ] [ li [] [ text "That email is already taken" ] ]
                     , Html.form [ E.onSubmit Submit ] <|
                         List.map (Html.map OnInput)
                             [ fieldset [ class "form-group" ]
+                                [ input
+                                    [ class "form-control form-control-lg"
+                                    , A.type_ "text"
+                                    , A.placeholder "Your Name"
+                                    , E.onInput (\s -> { form | username = s })
+                                    ]
+                                    []
+                                ]
+                            , fieldset [ class "form-group" ]
                                 [ input
                                     [ class "form-control form-control-lg"
                                     , A.type_ "text"

@@ -26,7 +26,13 @@ view_ ({ author } as article) =
                 ]
             , button
                 [ onClick ToggledFavorite
-                , class "btn btn-outline-primary btn-sm pull-xs-right"
+                , class "btn btn-sm pull-xs-right"
+                , class <|
+                    if article.favorited then
+                        "btn-primary"
+
+                    else
+                        "btn-outline-primary"
                 ]
                 [ i [ class "ion-heart" ] []
                 , text (String.fromInt article.favoritesCount)

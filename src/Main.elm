@@ -139,7 +139,7 @@ update msg model =
             handleUpdate
                 Page.Home
                 HomeMsg
-                (Page.Home.update subMsg subModel)
+                (Page.Home.update model subMsg subModel)
                 never
 
         ( Page.Login subModel, LoginMsg subMsg ) ->

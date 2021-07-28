@@ -9,8 +9,10 @@ module Page.Home exposing
 import Api
 import Api.Articles
 import Api.Articles.Feed
+import Api.Articles.Slug_.Favorite
 import Api.Tags
 import App
+import Browser.Navigation
 import Data.Article as Article exposing (Article)
 import Data.User exposing (User)
 import Html exposing (..)
@@ -19,6 +21,7 @@ import Html.Events as E
 import Html.Lazy exposing (lazy2)
 import Misc exposing (jumpToTop)
 import Ports
+import Route
 import View.ArticlePreview
 import View.NavPills
 import View.Pagination exposing (Pagination)
@@ -42,9 +45,10 @@ type Msg
     = GotTags (Api.Response (List String))
     | GotArticles (Api.Response Article.Collection)
     | SelectedFeed FeedType
-    | ToggleFavoriteArticle Article
+    | ToggleFavoriteArticle (Maybe User) Article
     | SelectedPagination Pagination
     | SetViewport
+    | ToggleFavoriteArticleResponse (Api.Response Article)
 
 
 initialPagination : Pagination
@@ -97,8 +101,14 @@ fetchArticles ( model, cmd, evt ) =
     ( model, Cmd.batch [ cmd, fetchCmd ], evt )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, Maybe Never )
-update msg model =
+update :
+    { r
+        | key : Browser.Navigation.Key
+    }
+    -> Msg
+    -> Model
+    -> ( Model, Cmd Msg, Maybe Never )
+update { key } msg model =
     case msg of
         SetViewport ->
             App.pure model
@@ -134,8 +144,42 @@ update msg model =
             App.pure { model | pagination = pagination }
                 |> fetchArticles
 
-        ToggleFavoriteArticle _ ->
-            Debug.todo "toggleFavorite"
+        ToggleFavoriteArticle mUser article ->
+            case mUser of
+                Nothing ->
+                    App.pure model
+                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Login))
+
+                Just user ->
+                    App.pure model
+                        |> App.withCmd
+                            (Api.Articles.Slug_.Favorite.post user article.slug
+                                |> Api.send ToggleFavoriteArticleResponse
+                            )
+
+        ToggleFavoriteArticleResponse res ->
+            case ( res, model.articles ) of
+                ( Ok newArticle, Just (Ok collection) ) ->
+                    let
+                        newCollection =
+                            collection.articles
+                                |> List.map
+                                    (\article ->
+                                        if article.slug /= newArticle.slug then
+                                            article
+
+                                        else
+                                            newArticle
+                                    )
+                    in
+                    App.pure { model | articles = Just (Ok { collection | articles = newCollection }) }
+
+                -- TODO handle err
+                ( Err _, _ ) ->
+                    App.pure model
+
+                _ ->
+                    App.pure model
 
 
 viewTagPill : String -> Html Msg
@@ -199,7 +243,7 @@ view { mUser } model =
                                     [ List.map
                                         (\article ->
                                             View.ArticlePreview.view
-                                                { onToggleFavorite = ToggleFavoriteArticle article }
+                                                { onToggleFavorite = ToggleFavoriteArticle mUser article }
                                                 article
                                         )
                                         collection.articles

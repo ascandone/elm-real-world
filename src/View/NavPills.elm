@@ -16,7 +16,7 @@ view active { onSelected } items =
                         ]
                         [ a
                             [ class "nav-link" -- disabled
-                            , A.href "#"
+                            , A.href ""
                             , onClick (onSelected data.item)
                             , A.classList [ ( "active", data.item == active ) ]
                             ]

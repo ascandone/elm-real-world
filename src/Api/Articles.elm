@@ -70,7 +70,7 @@ encodeBody body =
         [ ( "title", Enc.string body.title )
         , ( "description", Enc.string body.description )
         , ( "body", Enc.string body.body )
-        , ( "tagList", encodeMaybe body.tagList (Enc.list Enc.string) )
+        , ( "tagList", encodeMaybe (Enc.list Enc.string) body.tagList )
         ]
 
 

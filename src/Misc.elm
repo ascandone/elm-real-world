@@ -27,8 +27,8 @@ jumpToTop msg =
         |> Task.perform (\() -> msg)
 
 
-encodeMaybe : Maybe a -> (a -> Value) -> Value
-encodeMaybe m enc =
+encodeMaybe : (a -> Value) -> Maybe a -> Value
+encodeMaybe enc m =
     case m of
         Nothing ->
             Json.Encode.null

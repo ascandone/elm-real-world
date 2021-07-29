@@ -24,11 +24,11 @@ type alias PutBody =
 encodeBody : PutBody -> Value
 encodeBody body =
     Enc.object
-        [ ( "email", encodeMaybe body.email Enc.string )
-        , ( "username", encodeMaybe body.username Enc.string )
-        , ( "password", encodeMaybe body.password Enc.string )
-        , ( "image", encodeMaybe body.image Enc.string )
-        , ( "bio", encodeMaybe body.bio Enc.string )
+        [ ( "email", encodeMaybe Enc.string body.email )
+        , ( "username", encodeMaybe Enc.string body.username )
+        , ( "password", encodeMaybe Enc.string body.password )
+        , ( "image", encodeMaybe Enc.string body.image )
+        , ( "bio", encodeMaybe Enc.string body.bio )
         ]
 
 

@@ -9,6 +9,7 @@ import Html.Attributes as A exposing (class)
 import Json.Decode exposing (decodeString)
 import Json.Encode as Enc
 import Page exposing (Page)
+import Page.Article
 import Page.Home
 import Page.Login
 import Page.NotFound
@@ -60,6 +61,7 @@ type Msg
     | HomeMsg Page.Home.Msg
     | LoginMsg Page.Login.Msg
     | RegisterMsg Page.Register.Msg
+    | ArticleMsg Page.Article.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -123,7 +125,7 @@ update msg model =
                     Debug.todo "profile"
 
                 Just (ViewArticle slug) ->
-                    Debug.todo "viewArticle"
+                    handleInit Page.Article ArticleMsg Page.Article.init
 
                 Just (ViewProfile username) ->
                     Debug.todo "profile"
@@ -170,6 +172,12 @@ update msg model =
                     )
                 )
 
+        ( Page.Article subModel, ArticleMsg subMsg ) ->
+            handleUpdate Page.Article
+                ArticleMsg
+                (Page.Article.update subMsg subModel)
+                never
+
         _ ->
             ( model, Cmd.none )
 
@@ -201,7 +209,7 @@ viewMain model =
             Debug.todo "page view"
 
         Page.Article subModel ->
-            Debug.todo "page view"
+            ( Just "Article", Html.map ArticleMsg <| Page.Article.view subModel )
 
         Page.Profile subModel ->
             Debug.todo "page view"

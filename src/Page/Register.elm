@@ -7,14 +7,18 @@ module Page.Register exposing
     , view
     )
 
+import Api
+import Api.Users
 import App
+import Data.User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events as E
+import Route
 
 
 type Event
-    = SubmitForm Form
+    = Registered User
 
 
 type alias Form =
@@ -26,7 +30,7 @@ type alias Form =
 
 type alias Model =
     { form : Form
-    , error : Maybe String
+    , error : Maybe Api.ResponseErr
     }
 
 
@@ -42,6 +46,7 @@ init =
 type Msg
     = OnInput Form
     | Submit
+    | GotUser (Api.Response User)
 
 
 
@@ -62,23 +67,41 @@ update msg model =
         Submit ->
             if validateForm model.form then
                 App.pure model
-                    |> App.withEvt (SubmitForm model.form)
+                    |> App.withCmd (Api.Users.post model.form |> Api.send GotUser)
 
             else
                 App.pure model
 
+        GotUser result ->
+            case result of
+                Err error ->
+                    App.pure { model | error = Just error }
+
+                Ok user ->
+                    if validateForm model.form then
+                        App.pure model
+                            |> App.withEvt (Registered user)
+
+                    else
+                        App.pure model
+
 
 view : Model -> Html Msg
-view { form } =
+view ({ form } as model) =
     div [ class "auth-page" ]
         [ div [ class "container page" ]
             [ div [ class "row" ]
                 [ div [ class "col-md-6 offset-md-3 col-xs-12" ]
-                    [ h1 [ class "text-xs-center" ] [ text "Sign in" ]
+                    [ h1 [ class "text-xs-center" ] [ text "Sign up" ]
                     , p [ class "text-xs-center" ]
-                        --TODO link
-                        [ a [ A.href "" ] [ text "Have an account?" ] ]
-                    , ul [ class "error-messages" ] [ li [] [ text "That email is already taken" ] ]
+                        [ a [ A.href (Route.toHref Route.Login) ] [ text "Have an account?" ] ]
+                    , case model.error of
+                        Nothing ->
+                            text ""
+
+                        Just _ ->
+                            -- TODO show err
+                            ul [ class "error-messages" ] [ li [] [ text "That email is already taken" ] ]
                     , Html.form [ E.onSubmit Submit ] <|
                         List.map (Html.map OnInput)
                             [ fieldset [ class "form-group" ]
@@ -110,7 +133,7 @@ view { form } =
                                 ]
                             , button
                                 [ A.type_ "submit", class "btn btn-lg btn-primary pull-xs-right" ]
-                                [ text "Sign in" ]
+                                [ text "Sign up" ]
                             ]
                     ]
                 ]

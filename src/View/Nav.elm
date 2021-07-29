@@ -22,7 +22,7 @@ isLinkActive route page =
         ( Route.Login, Page.Login _ ) ->
             True
 
-        ( Route.Register, Page.Register ) ->
+        ( Route.Register, Page.Register _ ) ->
             True
 
         ( Route.Settings, Page.Settings ) ->

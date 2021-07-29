@@ -12,6 +12,7 @@ import Page exposing (Page)
 import Page.Home
 import Page.Login
 import Page.NotFound
+import Page.Register
 import Ports
 import Route as Route exposing (Route(..))
 import Url
@@ -58,6 +59,7 @@ type Msg
     | UrlChanged Url.Url
     | HomeMsg Page.Home.Msg
     | LoginMsg Page.Login.Msg
+    | RegisterMsg Page.Register.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -115,7 +117,7 @@ update msg model =
                     handleInit Page.Login LoginMsg Page.Login.init
 
                 Just Register ->
-                    Debug.todo "register"
+                    handleInit Page.Register RegisterMsg Page.Register.init
 
                 Just (Profile username) ->
                     Debug.todo "profile"
@@ -155,6 +157,19 @@ update msg model =
                     )
                 )
 
+        ( Page.Register subModel, RegisterMsg subMsg ) ->
+            handleUpdate Page.Register
+                RegisterMsg
+                (Page.Register.update subMsg subModel)
+                (\(Page.Register.Registered user) ->
+                    ( { model | mUser = Just user }
+                    , Cmd.batch
+                        [ Ports.serializeUser <| Enc.encode 2 (User.encode user)
+                        , Nav.pushUrl model.key (Route.toHref Route.Home)
+                        ]
+                    )
+                )
+
         _ ->
             ( model, Cmd.none )
 
@@ -173,8 +188,8 @@ viewMain model =
         Page.Login subModel ->
             ( Just "Login", Html.map LoginMsg <| Page.Login.view subModel )
 
-        Page.Register ->
-            Debug.todo "page view"
+        Page.Register subModel ->
+            ( Just "Register", Html.map RegisterMsg <| Page.Register.view subModel )
 
         Page.Settings ->
             Debug.todo "page view"

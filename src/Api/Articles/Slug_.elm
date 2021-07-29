@@ -22,9 +22,9 @@ type alias PutBody =
 encodeBody : PutBody -> Value
 encodeBody body =
     Enc.object
-        [ ( "title", encodeMaybe body.title Enc.string )
-        , ( "description", encodeMaybe body.description Enc.string )
-        , ( "body", encodeMaybe body.body Enc.string )
+        [ ( "title", encodeMaybe Enc.string body.title )
+        , ( "description", encodeMaybe Enc.string body.description )
+        , ( "body", encodeMaybe Enc.string body.body )
         ]
 
 

@@ -125,7 +125,7 @@ update msg model =
                     Debug.todo "profile"
 
                 Just (ViewArticle slug) ->
-                    handleInit Page.Article ArticleMsg Page.Article.init
+                    handleInit Page.Article ArticleMsg (Page.Article.init slug)
 
                 Just (ViewProfile username) ->
                     Debug.todo "profile"

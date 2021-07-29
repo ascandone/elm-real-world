@@ -9,9 +9,9 @@ type Page
     = Home Page.Home.Model
     | Login Page.Login.Model
     | Register Page.Register.Model
-    | Settings
-    | NewPost
-    | Editor
-    | Article
-    | Profile
+    | Settings ()
+    | NewPost ()
+    | Editor ()
+    | Article ()
+    | Profile ()
     | NotFound

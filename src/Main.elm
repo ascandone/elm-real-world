@@ -191,19 +191,19 @@ viewMain model =
         Page.Register subModel ->
             ( Just "Register", Html.map RegisterMsg <| Page.Register.view subModel )
 
-        Page.Settings ->
+        Page.Settings subModel ->
             Debug.todo "page view"
 
-        Page.NewPost ->
+        Page.NewPost subModel ->
             Debug.todo "page view"
 
-        Page.Editor ->
+        Page.Editor subModel ->
             Debug.todo "page view"
 
-        Page.Article ->
+        Page.Article subModel ->
             Debug.todo "page view"
 
-        Page.Profile ->
+        Page.Profile subModel ->
             Debug.todo "page view"
 
         Page.NotFound ->

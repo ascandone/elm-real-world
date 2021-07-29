@@ -25,19 +25,19 @@ isLinkActive route page =
         ( Route.Register, Page.Register _ ) ->
             True
 
-        ( Route.Settings, Page.Settings ) ->
+        ( Route.Settings, Page.Settings _ ) ->
             True
 
-        ( Route.NewPost, Page.NewPost ) ->
+        ( Route.NewPost, Page.NewPost _ ) ->
             True
 
-        ( Route.Editor _, Page.Editor ) ->
+        ( Route.Editor _, Page.Editor _ ) ->
             True
 
-        ( Route.ViewArticle _, Page.Article ) ->
+        ( Route.ViewArticle _, Page.Article _ ) ->
             True
 
-        ( Route.Profile _, Page.Profile ) ->
+        ( Route.Profile _, Page.Profile _ ) ->
             True
 
         _ ->

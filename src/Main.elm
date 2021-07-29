@@ -209,7 +209,7 @@ viewMain model =
             Debug.todo "page view"
 
         Page.Article subModel ->
-            ( Just "Article", Html.map ArticleMsg <| Page.Article.view subModel )
+            ( Just "Article", Html.map ArticleMsg <| Page.Article.view model subModel )
 
         Page.Profile subModel ->
             Debug.todo "page view"

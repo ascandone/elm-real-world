@@ -10,8 +10,11 @@ module Page.Article exposing
 import Api
 import App
 import Data.Article exposing (Article)
+import Data.Comment exposing (Comment)
+import Data.User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class, href)
+import Markdown
 import View.ArticleMeta
 
 
@@ -21,6 +24,7 @@ type alias Event =
 
 type alias Model =
     { asyncArticle : Maybe (Api.Response Article)
+    , asyncComments : Maybe (Api.Response Comment)
     }
 
 
@@ -31,6 +35,7 @@ type Msg
 init : ( Model, Cmd Msg )
 init =
     ( { asyncArticle = Nothing
+      , asyncComments = Nothing
       }
     , Cmd.none
     )
@@ -43,8 +48,8 @@ update msg model =
             App.pure model
 
 
-view : Model -> Html Msg
-view model =
+view : { r | mUser : Maybe User } -> Model -> Html Msg
+view { mUser } model =
     case model.asyncArticle of
         Nothing ->
             text "Loading..."
@@ -56,26 +61,16 @@ view model =
             div [ class "article-page" ]
                 [ div [ class "banner" ]
                     [ div [ class "container" ]
-                        [ h1 []
-                            [ text "How to build webapps that scale" ]
+                        [ h1 [] [ text article.title ]
                         , View.ArticleMeta.view article
                         ]
                     ]
                 , div [ class "container page" ]
                     [ div [ class "row article-content" ]
-                        [ div [ class "col-md-12" ]
-                            [ p []
-                                [ text "Web development technologies have evolved at an incredible clip over the past few years.        " ]
-                            , h2 [ A.id "introducing-ionic" ]
-                                [ text "Introducing RealWorld." ]
-                            , p []
-                                [ text "It's a great solution for learning how other frameworks work." ]
-                            ]
-                        ]
+                        [ Markdown.toHtml [ class "col-md-12" ] article.body ]
                     , hr [] []
                     , div [ class "article-actions" ]
-                        [ View.ArticleMeta.view article
-                        ]
+                        [ View.ArticleMeta.view article ]
                     , div [ class "row" ]
                         [ div [ class "col-xs-12 col-md-8 offset-md-2" ]
                             [ form [ class "card comment-form" ]

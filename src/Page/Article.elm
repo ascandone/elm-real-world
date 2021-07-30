@@ -8,6 +8,8 @@ module Page.Article exposing
     )
 
 import Api
+import Api.Articles
+import Api.Articles.Slug_
 import App
 import Data.Article exposing (Article)
 import Data.Comment exposing (Comment)
@@ -32,7 +34,7 @@ type alias Model =
 
 
 type Msg
-    = Noop
+    = GotArticle (Api.Response Article)
 
 
 init : String -> ( Model, Cmd Msg )
@@ -41,15 +43,15 @@ init slug =
       , asyncArticle = Nothing
       , asyncComments = Nothing
       }
-    , Cmd.none
+    , Api.Articles.Slug_.get slug |> Api.send GotArticle
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg, Maybe Event )
 update msg model =
     case msg of
-        _ ->
-            App.pure model
+        GotArticle response ->
+            App.pure { model | asyncArticle = Just response }
 
 
 viewCardCommentForm : User -> Html msg

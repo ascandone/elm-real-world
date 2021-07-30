@@ -26,6 +26,7 @@ createServer({
 
     this.post("articles/:slug/favorite", favoriteArticle);
     this.delete("articles/:slug/favorite", favoriteArticle);
+    this.get("articles/:slug", () => ({ article: articles.articles[1] }));
 
     this.get("/tags", () => ({ tags }));
 

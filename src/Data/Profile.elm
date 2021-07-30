@@ -1,4 +1,4 @@
-module Data.Profile exposing (Profile, decoder)
+module Data.Profile exposing (Profile, decoder, decoderSingle)
 
 import Json.Decode exposing (Decoder, bool, string, succeed)
 import Json.Decode.Pipeline exposing (required)
@@ -20,3 +20,9 @@ decoder =
         |> optionalMaybe "bio" string
         |> optionalMaybe "image" string
         |> required "following" bool
+
+
+decoderSingle : Decoder Profile
+decoderSingle =
+    succeed identity
+        |> required "profile" decoder

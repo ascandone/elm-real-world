@@ -10,9 +10,11 @@ module Page.Article exposing
 import Api
 import Api.Articles
 import Api.Articles.Slug_
+import Api.Profiles.Username_.Follow
 import App
 import Data.Article exposing (Article)
 import Data.Comment exposing (Comment)
+import Data.Profile exposing (Profile)
 import Data.User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class, href)
@@ -35,6 +37,9 @@ type alias Model =
 
 type Msg
     = GotArticle (Api.Response Article)
+    | ClickedFavorite (Maybe User)
+    | ClickedFollow (Maybe User)
+    | GotFavoriteResponse (Api.Response Profile)
 
 
 init : String -> ( Model, Cmd Msg )
@@ -52,6 +57,43 @@ update msg model =
     case msg of
         GotArticle response ->
             App.pure { model | asyncArticle = Just response }
+
+        ClickedFollow mUser ->
+            case ( model.asyncArticle, mUser ) of
+                ( Just (Ok article), Just user ) ->
+                    let
+                        action =
+                            if article.author.following then
+                                Api.Profiles.Username_.Follow.delete
+
+                            else
+                                Api.Profiles.Username_.Follow.post
+                    in
+                    App.pure model
+                        |> App.withCmd
+                            (action user article.author.username
+                                |> Api.send GotFavoriteResponse
+                            )
+
+                ( _, Nothing ) ->
+                    Debug.todo "redirect to login"
+
+                _ ->
+                    App.pure model
+
+        ClickedFavorite _ ->
+            Debug.todo "fav"
+
+        GotFavoriteResponse res ->
+            case ( model.asyncArticle, res ) of
+                ( _, Err _ ) ->
+                    Debug.todo "handle err"
+
+                ( Just (Ok article), Ok profile ) ->
+                    App.pure { model | asyncArticle = Just (Ok { article | author = profile }) }
+
+                _ ->
+                    App.pure model
 
 
 viewCardCommentForm : User -> Html msg
@@ -97,7 +139,11 @@ view { mUser } model =
                 [ div [ class "banner" ]
                     [ div [ class "container" ]
                         [ h1 [] [ text article.title ]
-                        , View.ArticleMeta.view article
+                        , View.ArticleMeta.view
+                            { onClickedFavorite = ClickedFavorite mUser
+                            , onClickedFollow = ClickedFollow mUser
+                            }
+                            article
                         ]
                     ]
                 , div [ class "container page" ]
@@ -105,7 +151,12 @@ view { mUser } model =
                         [ Markdown.toHtml [ class "col-md-12" ] article.body ]
                     , hr [] []
                     , div [ class "article-actions" ]
-                        [ View.ArticleMeta.view article ]
+                        [ View.ArticleMeta.view
+                            { onClickedFavorite = ClickedFavorite mUser
+                            , onClickedFollow = ClickedFollow mUser
+                            }
+                            article
+                        ]
                     , div [ class "row" ]
                         [ div [ class "col-xs-12 col-md-8 offset-md-2" ] <|
                             List.append

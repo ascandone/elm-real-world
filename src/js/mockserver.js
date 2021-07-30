@@ -11,6 +11,19 @@ function favoriteArticle(_schema, req) {
     },
   };
 }
+const getFollowAuthor = (following) =>
+  function followAuthor(_schema, req) {
+    const profile = articles.articles.find(
+      (a) => a.author.username === req.params.username
+    ).author;
+
+    return {
+      profile: {
+        ...profile,
+        following,
+      },
+    };
+  };
 
 createServer({
   models: {
@@ -24,9 +37,12 @@ createServer({
     this.get("/articles", () => articles);
     this.get("/articles/feed", () => articles);
 
-    this.post("articles/:slug/favorite", favoriteArticle);
-    this.delete("articles/:slug/favorite", favoriteArticle);
-    this.get("articles/:slug", () => ({ article: articles.articles[1] }));
+    this.post("/articles/:slug/favorite", favoriteArticle);
+    this.delete("/articles/:slug/favorite", favoriteArticle);
+    this.get("/articles/:slug", () => ({ article: articles.articles[1] }));
+
+    this.post("/profiles/:username/follow", getFollowAuthor(true));
+    this.delete("/profiles/:username/follow", getFollowAuthor(false));
 
     this.get("/tags", () => ({ tags }));
 

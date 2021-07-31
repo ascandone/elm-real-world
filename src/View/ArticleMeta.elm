@@ -6,6 +6,7 @@ import Html.Attributes as A exposing (class)
 import Html.Events as E
 import Html.Lazy exposing (lazy)
 import Misc
+import Route
 
 
 type Msg
@@ -13,17 +14,13 @@ type Msg
     | ClickedFavorite
 
 
-
--- TODO better labels when favorited/followed
-
-
 view_ : Article -> Html Msg
 view_ ({ author } as article) =
     div [ class "article-meta" ]
-        [ a [ A.href "" ]
+        [ a [ A.href (Route.toHref <| Route.ViewProfile author.username) ]
             [ img [ A.src (Misc.defaultImage author.image) ] [] ]
         , div [ class "info" ]
-            [ a [ class "author", A.href "" ] [ text author.username ]
+            [ a [ class "author", A.href (Route.toHref <| Route.ViewProfile author.username) ] [ text author.username ]
             , span [ class "date" ] [ text article.createdAt ] --TODO
             ]
         , button
@@ -37,7 +34,12 @@ view_ ({ author } as article) =
             , E.onClick ClickedFollow
             ]
             [ i [ class "ion-plus-round" ] []
-            , text "Follow "
+            , text <|
+                if author.following then
+                    "Unfollow "
+
+                else
+                    "Follow "
             , text author.username
             ]
         , button

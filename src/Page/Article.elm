@@ -8,8 +8,8 @@ module Page.Article exposing
     )
 
 import Api
-import Api.Articles
 import Api.Articles.Slug_
+import Api.Articles.Slug_.Comments
 import Api.Articles.Slug_.Favorite
 import Api.Profiles.Username_.Follow
 import App
@@ -20,8 +20,9 @@ import Data.Profile exposing (Profile)
 import Data.User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class, href)
+import Html.Events exposing (onClick, onInput)
 import Markdown
-import Misc
+import Misc exposing (defaultImage)
 import Route
 import View.ArticleMeta
 
@@ -34,6 +35,7 @@ type alias Model =
     { slug : String
     , asyncArticle : Maybe (Api.Response Article)
     , asyncComments : Maybe (Api.Response (List Comment))
+    , comment : String
     }
 
 
@@ -43,6 +45,9 @@ type Msg
     | ClickedFollow
     | GotFollowResponse (Api.Response Profile)
     | GotFavoriteResponse (Api.Response Article)
+    | InputComment String
+    | SubmitComment User
+    | GotCommentResponse (Api.Response Comment)
 
 
 init : String -> ( Model, Cmd Msg )
@@ -50,14 +55,32 @@ init slug =
     ( { slug = slug
       , asyncArticle = Nothing
       , asyncComments = Nothing
+      , comment = ""
       }
     , Api.Articles.Slug_.get slug |> Api.send GotArticle
     )
 
 
-update : { r | key : Browser.Navigation.Key, mUser : Maybe User } -> Msg -> Model -> ( Model, Cmd Msg, Maybe Event )
+update :
+    { r | key : Browser.Navigation.Key, mUser : Maybe User }
+    -> Msg
+    -> Model
+    -> ( Model, Cmd Msg, Maybe Event )
 update { key, mUser } msg model =
     case msg of
+        InputComment str ->
+            App.pure { model | comment = str }
+
+        SubmitComment user ->
+            App.pure model
+                |> App.withCmd
+                    (Api.Articles.Slug_.Comments.post user { body = model.comment } model.slug
+                        |> Api.send GotCommentResponse
+                    )
+
+        GotCommentResponse _ ->
+            Debug.todo "handle comment response"
+
         GotArticle response ->
             App.pure { model | asyncArticle = Just response }
 
@@ -132,15 +155,26 @@ update { key, mUser } msg model =
                     App.pure model
 
 
-viewCardCommentForm : User -> Html msg
-viewCardCommentForm user =
+viewCardCommentForm : { onInput : String -> msg, onSubmit : msg } -> User -> Html msg
+viewCardCommentForm props user =
     form [ class "card comment-form" ]
         [ div [ class "card-block" ]
-            [ textarea [ class "form-control", A.placeholder "Write a comment...", A.rows 3 ] []
+            [ textarea
+                [ class "form-control"
+                , A.placeholder "Write a comment..."
+                , A.rows 3
+                , onInput props.onInput
+                ]
+                []
             ]
         , div [ class "card-footer" ]
-            [ img [ class "comment-author-img", A.src "http://i.imgur.com/Qr71crq.jpg" ] []
-            , button [ class "btn btn-sm btn-primary" ] [ text "Post Comment" ]
+            [ img [ class "comment-author-img", A.src (defaultImage user.image) ] []
+            , button
+                [ A.type_ "button"
+                , onClick props.onSubmit
+                , class "btn btn-sm btn-primary"
+                ]
+                [ text "Post Comment" ]
             ]
         ]
 
@@ -155,7 +189,8 @@ viewCommentCard ({ author } as comment) =
             [ a [ class "comment-author", href (Route.toHref (Route.ViewProfile author.username)) ]
                 [ img [ class "comment-author-img", A.src (Misc.defaultImage author.image) ] []
                 ]
-            , a [ class "comment-author", href (Route.toHref (Route.ViewProfile author.username)) ] [ text author.username ]
+            , a [ class "comment-author", href (Route.toHref (Route.ViewProfile author.username)) ]
+                [ text author.username ]
             , span [ class "date-posted" ] [ text comment.createdAt ] -- TODO format
             ]
         ]
@@ -201,7 +236,11 @@ view { mUser } model =
                                         text ""
 
                                     Just user ->
-                                        viewCardCommentForm user
+                                        viewCardCommentForm
+                                            { onInput = InputComment
+                                            , onSubmit = SubmitComment user
+                                            }
+                                            user
                                 ]
                                 (case model.asyncComments of
                                     Nothing ->

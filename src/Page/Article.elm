@@ -10,8 +10,10 @@ module Page.Article exposing
 import Api
 import Api.Articles
 import Api.Articles.Slug_
+import Api.Articles.Slug_.Favorite
 import Api.Profiles.Username_.Follow
 import App
+import Browser.Navigation
 import Data.Article exposing (Article)
 import Data.Comment exposing (Comment)
 import Data.Profile exposing (Profile)
@@ -37,9 +39,10 @@ type alias Model =
 
 type Msg
     = GotArticle (Api.Response Article)
-    | ClickedFavorite (Maybe User)
-    | ClickedFollow (Maybe User)
-    | GotFavoriteResponse (Api.Response Profile)
+    | ClickedFavorite
+    | ClickedFollow
+    | GotFollowResponse (Api.Response Profile)
+    | GotFavoriteResponse (Api.Response Article)
 
 
 init : String -> ( Model, Cmd Msg )
@@ -52,13 +55,13 @@ init slug =
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, Maybe Event )
-update msg model =
+update : { r | key : Browser.Navigation.Key, mUser : Maybe User } -> Msg -> Model -> ( Model, Cmd Msg, Maybe Event )
+update { key, mUser } msg model =
     case msg of
         GotArticle response ->
             App.pure { model | asyncArticle = Just response }
 
-        ClickedFollow mUser ->
+        ClickedFollow ->
             case ( model.asyncArticle, mUser ) of
                 ( Just (Ok article), Just user ) ->
                     let
@@ -72,25 +75,58 @@ update msg model =
                     App.pure model
                         |> App.withCmd
                             (action user article.author.username
-                                |> Api.send GotFavoriteResponse
+                                |> Api.send GotFollowResponse
                             )
 
                 ( _, Nothing ) ->
-                    Debug.todo "redirect to login"
+                    App.pure model
+                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Login))
 
                 _ ->
                     App.pure model
 
-        ClickedFavorite _ ->
-            Debug.todo "fav"
+        ClickedFavorite ->
+            case ( model.asyncArticle, mUser ) of
+                ( Just (Ok article), Just user ) ->
+                    let
+                        action =
+                            if article.favorited then
+                                Api.Articles.Slug_.Favorite.delete
 
-        GotFavoriteResponse res ->
+                            else
+                                Api.Articles.Slug_.Favorite.post
+                    in
+                    App.pure model
+                        |> App.withCmd
+                            (action user article.slug
+                                |> Api.send GotFavoriteResponse
+                            )
+
+                ( _, Nothing ) ->
+                    App.pure model
+                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Login))
+
+                _ ->
+                    App.pure model
+
+        GotFollowResponse res ->
             case ( model.asyncArticle, res ) of
                 ( _, Err _ ) ->
                     Debug.todo "handle err"
 
                 ( Just (Ok article), Ok profile ) ->
                     App.pure { model | asyncArticle = Just (Ok { article | author = profile }) }
+
+                _ ->
+                    App.pure model
+
+        GotFavoriteResponse res ->
+            case ( model.asyncArticle, res ) of
+                ( _, Err _ ) ->
+                    App.pure model
+
+                ( Just (Ok _), Ok article ) ->
+                    App.pure { model | asyncArticle = Just (Ok article) }
 
                 _ ->
                     App.pure model
@@ -140,8 +176,8 @@ view { mUser } model =
                     [ div [ class "container" ]
                         [ h1 [] [ text article.title ]
                         , View.ArticleMeta.view
-                            { onClickedFavorite = ClickedFavorite mUser
-                            , onClickedFollow = ClickedFollow mUser
+                            { onClickedFavorite = ClickedFavorite
+                            , onClickedFollow = ClickedFollow
                             }
                             article
                         ]
@@ -152,8 +188,8 @@ view { mUser } model =
                     , hr [] []
                     , div [ class "article-actions" ]
                         [ View.ArticleMeta.view
-                            { onClickedFavorite = ClickedFavorite mUser
-                            , onClickedFollow = ClickedFollow mUser
+                            { onClickedFavorite = ClickedFavorite
+                            , onClickedFollow = ClickedFollow
                             }
                             article
                         ]

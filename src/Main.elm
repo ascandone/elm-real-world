@@ -175,7 +175,7 @@ update msg model =
         ( Page.Article subModel, ArticleMsg subMsg ) ->
             handleUpdate Page.Article
                 ArticleMsg
-                (Page.Article.update subMsg subModel)
+                (Page.Article.update model subMsg subModel)
                 never
 
         _ ->

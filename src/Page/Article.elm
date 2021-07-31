@@ -8,6 +8,7 @@ module Page.Article exposing
     )
 
 import Api
+import Api.Articles exposing (author)
 import Api.Articles.Slug_
 import Api.Articles.Slug_.Comments
 import Api.Articles.Slug_.Favorite
@@ -15,6 +16,7 @@ import Api.Profiles.Username_.Follow
 import App
 import Browser.Navigation
 import Data.Article exposing (Article)
+import Data.Async exposing (Async)
 import Data.Comment exposing (Comment)
 import Data.Profile exposing (Profile)
 import Data.User exposing (User)
@@ -41,6 +43,7 @@ type alias Model =
 
 type Msg
     = GotArticle (Api.Response Article)
+    | GotComments (Api.Response (List Comment))
     | ClickedFavorite
     | ClickedFollow
     | GotFollowResponse (Api.Response Profile)
@@ -48,6 +51,8 @@ type Msg
     | InputComment String
     | SubmitComment User
     | GotCommentResponse (Api.Response Comment)
+    | DeletedComment User String Int
+    | GotDeleteCommentResponse Int (Api.Response ())
 
 
 init : String -> ( Model, Cmd Msg )
@@ -57,17 +62,27 @@ init slug =
       , asyncComments = Nothing
       , comment = ""
       }
-    , Api.Articles.Slug_.get slug |> Api.send GotArticle
+    , Cmd.batch
+        [ Api.Articles.Slug_.get slug |> Api.send GotArticle
+        , Api.Articles.Slug_.Comments.get slug |> Api.send GotComments
+        ]
     )
 
 
 update :
-    { r | key : Browser.Navigation.Key, mUser : Maybe User }
+    { r
+        | key : Browser.Navigation.Key
+        , mUser : Maybe User
+    }
     -> Msg
     -> Model
     -> ( Model, Cmd Msg, Maybe Event )
 update { key, mUser } msg model =
     case msg of
+        GotComments res ->
+            App.pure { model | asyncComments = Just res }
+                |> App.withCmd (Api.logIfError res)
+
         InputComment str ->
             App.pure { model | comment = str }
 
@@ -78,8 +93,20 @@ update { key, mUser } msg model =
                         |> Api.send GotCommentResponse
                     )
 
-        GotCommentResponse _ ->
-            Debug.todo "handle comment response"
+        GotCommentResponse response ->
+            case ( response, model.asyncComments ) of
+                ( Ok comment, Just (Ok comments) ) ->
+                    App.pure
+                        { model
+                            | asyncComments = Just (Ok (comment :: comments))
+                            , comment = ""
+                        }
+
+                ( Ok _, _ ) ->
+                    App.pure { model | comment = "" }
+
+                _ ->
+                    App.pure model
 
         GotArticle response ->
             App.pure { model | asyncArticle = Just response }
@@ -154,8 +181,37 @@ update { key, mUser } msg model =
                 _ ->
                     App.pure model
 
+        DeletedComment user slug id ->
+            App.pure model
+                |> App.withCmd
+                    (Api.Articles.Slug_.Comments.delete user slug id
+                        |> Api.send (GotDeleteCommentResponse id)
+                    )
 
-viewCardCommentForm : { onInput : String -> msg, onSubmit : msg } -> User -> Html msg
+        GotDeleteCommentResponse id res ->
+            case ( res, model.asyncComments ) of
+                ( Ok (), Just (Ok comments) ) ->
+                    let
+                        filtered =
+                            comments |> List.filter (\comment -> comment.id /= id)
+                    in
+                    App.pure { model | asyncComments = Just (Ok filtered) }
+
+                ( Err err, _ ) ->
+                    App.pure model
+                        |> App.withCmd (Api.logError err)
+
+                _ ->
+                    App.pure model
+
+
+viewCardCommentForm :
+    { value : String
+    , onInput : String -> msg
+    , onSubmit : msg
+    }
+    -> User
+    -> Html msg
 viewCardCommentForm props user =
     form [ class "card comment-form" ]
         [ div [ class "card-block" ]
@@ -164,6 +220,7 @@ viewCardCommentForm props user =
                 , A.placeholder "Write a comment..."
                 , A.rows 3
                 , onInput props.onInput
+                , A.value props.value
                 ]
                 []
             ]
@@ -179,8 +236,8 @@ viewCardCommentForm props user =
         ]
 
 
-viewCommentCard : Comment -> Html msg
-viewCommentCard ({ author } as comment) =
+viewCommentCard : Maybe User -> Article -> Comment -> Html Msg
+viewCommentCard mUser article ({ author } as comment) =
     div [ class "card" ]
         [ div [ class "card-block" ]
             [ p [ class "card-text" ] [ text comment.body ]
@@ -192,6 +249,20 @@ viewCommentCard ({ author } as comment) =
             , a [ class "comment-author", href (Route.toHref (Route.ViewProfile author.username)) ]
                 [ text author.username ]
             , span [ class "date-posted" ] [ text comment.createdAt ] -- TODO format
+            , case mUser of
+                Nothing ->
+                    text ""
+
+                Just user ->
+                    if user.username /= author.username then
+                        text ""
+
+                    else
+                        span
+                            [ class "mod-options"
+                            , onClick (DeletedComment user article.slug comment.id)
+                            ]
+                            [ i [ class "ion-trash-a" ] [] ]
             ]
         ]
 
@@ -239,6 +310,7 @@ view { mUser } model =
                                         viewCardCommentForm
                                             { onInput = InputComment
                                             , onSubmit = SubmitComment user
+                                            , value = model.comment
                                             }
                                             user
                                 ]
@@ -250,7 +322,8 @@ view { mUser } model =
                                         [ text "Error" ]
 
                                     Just (Ok comments) ->
-                                        comments |> List.map viewCommentCard
+                                        comments
+                                            |> List.map (viewCommentCard mUser article)
                                 )
                         ]
                     ]

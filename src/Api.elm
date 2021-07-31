@@ -2,12 +2,15 @@ module Api exposing
     ( ApiError
     , Response
     , ResponseErr(..)
+    , logError
+    , logIfError
     , send
     )
 
 import Api.Internal exposing (Request(..))
 import Http
 import Json.Decode as Dec exposing (Decoder)
+import Ports
 import Url.Builder
 
 
@@ -21,8 +24,23 @@ type ResponseErr
     | HttpError Http.Error
 
 
+logError : ResponseErr -> Cmd msg
+logError e =
+    Ports.logError (Debug.toString e)
+
+
 type alias Response data =
     Result ResponseErr data
+
+
+logIfError : Response data -> Cmd msg
+logIfError res =
+    case res of
+        Ok _ ->
+            Cmd.none
+
+        Err err ->
+            logError err
 
 
 errorDecoder : Decoder ApiError

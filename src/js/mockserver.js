@@ -1,5 +1,5 @@
 import { createServer, Model } from "miragejs";
-import { articles, tags, user } from "./mockdata";
+import { articles, tags, user, comments } from "./mockdata";
 
 const getFavoriteArticle = (favorited) =>
   function favoriteArticle(_schema, req) {
@@ -63,9 +63,9 @@ createServer({
     this.delete("/articles/:slug/favorite", getFavoriteArticle(false));
     this.get("/articles/:slug", () => ({ article: articles.articles[1] }));
 
-    this.get("/articles/:slug/comments", () => ({}));
+    this.get("/articles/:slug/comments", () => comments);
     this.post("/articles/:slug/comments", postComment);
-    this.delete("/articles/:slug/comments", () => ({}));
+    this.delete("/articles/:slug/comments/:id", () => ({}));
 
     this.post("/profiles/:username/follow", getFollowAuthor(true));
     this.delete("/profiles/:username/follow", getFollowAuthor(false));

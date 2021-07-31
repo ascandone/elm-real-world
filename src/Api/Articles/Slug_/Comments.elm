@@ -31,7 +31,7 @@ get slug =
     Api.Internal.get Comment.decoderMultiple [ "articles", slug, "comments" ]
 
 
-delete : User -> String -> Api.Internal.Request ()
-delete user slug =
-    Api.Internal.delete (Json.Decode.succeed ()) [ "articles", slug, "comments" ]
+delete : User -> String -> Int -> Api.Internal.Request ()
+delete user slug id =
+    Api.Internal.delete (Json.Decode.succeed ()) [ "articles", slug, "comments", String.fromInt id ]
         |> Api.Internal.withAuth user

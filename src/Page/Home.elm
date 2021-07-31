@@ -118,9 +118,9 @@ update { key } msg model =
                 Ok tags ->
                     App.pure { model | tags = Just tags }
 
-                Err _ ->
+                Err e ->
                     App.pure model
-                        |> App.withCmd (Ports.logError "tags response error")
+                        |> App.withCmd (Api.logError e)
 
         GotArticles res ->
             -- TODO handle err
@@ -130,7 +130,7 @@ update { key } msg model =
             in
             case res of
                 Err e ->
-                    ret |> App.withCmd (Ports.logError (Debug.toString e))
+                    ret |> App.withCmd (Api.logError e)
 
                 _ ->
                     ret

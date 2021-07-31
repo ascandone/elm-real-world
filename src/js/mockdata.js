@@ -20,12 +20,31 @@ export const tags = [
   "dragons",
   "butt",
 ];
+
 export const user = {
   email: "jake@jake.jake",
   token: "jwt.token.here",
   username: "jake",
   bio: "I work at statefarm",
   image: null,
+};
+
+export const comments = {
+  comments: [
+    {
+      id: 103512,
+      createdAt: "2021-07-29T18:47:40.214Z",
+      updatedAt: "2021-07-29T18:47:40.214Z",
+      body: "test",
+      author: {
+        username: "ascandone",
+        bio: "testing new bio",
+        image:
+          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8\u0026ixlib=rb-1.2.1\u0026auto=format\u0026fit=crop\u0026w=800\u0026q=80",
+        following: false,
+      },
+    },
+  ],
 };
 
 export const articles = {

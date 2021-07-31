@@ -12,6 +12,7 @@ const getFavoriteArticle = (favorited) =>
       },
     };
   };
+
 const getFollowAuthor = (following) =>
   function followAuthor(_schema, req) {
     const profile = articles.articles.find(
@@ -25,6 +26,26 @@ const getFollowAuthor = (following) =>
       },
     };
   };
+
+function postComment(_schema, { requestBody }) {
+  const { body } = JSON.parse(requestBody);
+
+  return {
+    comment: {
+      id: 103512,
+      createdAt: "2021-07-29T18:47:40.214Z",
+      updatedAt: "2021-07-29T18:47:40.214Z",
+      body,
+      author: {
+        username: "ascandone",
+        bio: "testing new bio",
+        image:
+          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8\u0026ixlib=rb-1.2.1\u0026auto=format\u0026fit=crop\u0026w=800\u0026q=80",
+        following: false,
+      },
+    },
+  };
+}
 
 createServer({
   models: {
@@ -41,6 +62,10 @@ createServer({
     this.post("/articles/:slug/favorite", getFavoriteArticle(true));
     this.delete("/articles/:slug/favorite", getFavoriteArticle(false));
     this.get("/articles/:slug", () => ({ article: articles.articles[1] }));
+
+    this.get("/articles/:slug/comments", () => ({}));
+    this.post("/articles/:slug/comments", postComment);
+    this.delete("/articles/:slug/comments", () => ({}));
 
     this.post("/profiles/:username/follow", getFollowAuthor(true));
     this.delete("/profiles/:username/follow", getFollowAuthor(false));

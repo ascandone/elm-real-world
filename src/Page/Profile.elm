@@ -10,13 +10,17 @@ module Page.Profile exposing
 import Api
 import Api.Articles exposing (limit)
 import Api.Profiles.Username_
+import Api.Profiles.Username_.Follow
 import App
+import Browser.Navigation
 import Data.Article as Article exposing (Collection)
 import Data.Async as Async exposing (Async(..))
 import Data.Profile exposing (Profile)
+import Data.User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Misc exposing (jumpToTop)
+import Route
 import View.ArticlePreview
 import View.FollowButton
 import View.NavPills
@@ -85,15 +89,24 @@ init { username } =
 type Msg
     = GotProfile (Api.Response Profile)
     | GotArticles (Api.Response Article.Collection)
-    | ClickedFollow
+    | ClickedFollow Profile
     | ToggleFavorite
     | SetFeed Feed
     | SelectedPagination View.Pagination.Pagination
     | SetViewport
+    | GotFollowResponse (Api.Response Profile)
 
 
-update : { username : String } -> Msg -> Model -> ( Model, Cmd Msg, Maybe Event )
-update { username } msg model =
+update :
+    { r
+        | mUser : Maybe User
+        , key : Browser.Navigation.Key
+    }
+    -> { username : String }
+    -> Msg
+    -> Model
+    -> ( Model, Cmd Msg, Maybe Event )
+update { mUser, key } { username } msg model =
     case msg of
         SetViewport ->
             App.pure model
@@ -108,8 +121,32 @@ update { username } msg model =
             App.pure { model | asyncProfile = Async.fromResponse res }
                 |> App.withCmd (Api.logIfError res)
 
-        ClickedFollow ->
-            Debug.todo "clickedFollow"
+        ClickedFollow profile ->
+            case mUser of
+                Nothing ->
+                    App.pure model
+                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Home))
+
+                Just user ->
+                    let
+                        action =
+                            if profile.following then
+                                Api.Profiles.Username_.Follow.delete
+
+                            else
+                                Api.Profiles.Username_.Follow.post
+                    in
+                    App.pure model
+                        |> App.withCmd (action user profile.username |> Api.send GotFollowResponse)
+
+        GotFollowResponse res ->
+            case res of
+                Ok profile ->
+                    App.pure { model | asyncProfile = GotData profile }
+
+                Err err ->
+                    App.pure model
+                        |> App.withCmd (Api.logError err)
 
         GotArticles res ->
             App.pure { model | asyncArticles = Async.fromResponse res }
@@ -191,7 +228,7 @@ viewUserInfo profile =
                         Just bio ->
                             p [] [ text bio ]
                     , View.FollowButton.view
-                        { onFollow = ClickedFollow }
+                        { onFollow = ClickedFollow profile }
                         profile
                     ]
                 ]

@@ -184,7 +184,7 @@ update msg model =
             else
                 handleUpdate (Page.Profile username)
                     (ProfileMsg username)
-                    (Page.Profile.update { username = username } subMsg subModel)
+                    (Page.Profile.update model { username = username } subMsg subModel)
                     never
 
         _ ->

@@ -1,4 +1,10 @@
-module Data.Article exposing (Article, Collection, decoderCollection, decoderSingle)
+module Data.Article exposing
+    ( Article
+    , Collection
+    , decoderCollection
+    , decoderSingle
+    , replaceArticle
+    )
 
 import Data.Profile as Profile exposing (Profile)
 import Json.Decode exposing (Decoder, bool, int, list, string, succeed)
@@ -51,3 +57,19 @@ decoderCollection =
     succeed Collection
         |> required "articles" (list decoder)
         |> required "articlesCount" int
+
+
+replaceArticle : Article -> Collection -> Collection
+replaceArticle newArticle collection =
+    { collection
+        | articles =
+            collection.articles
+                |> List.map
+                    (\article ->
+                        if article.slug /= newArticle.slug then
+                            article
+
+                        else
+                            newArticle
+                    )
+    }

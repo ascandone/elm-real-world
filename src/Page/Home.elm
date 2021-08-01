@@ -159,19 +159,10 @@ update { key } msg model =
         ToggleFavoriteArticleResponse res ->
             case ( res, model.articles ) of
                 ( Ok newArticle, Just (Ok collection) ) ->
-                    let
-                        newCollection =
-                            collection.articles
-                                |> List.map
-                                    (\article ->
-                                        if article.slug /= newArticle.slug then
-                                            article
-
-                                        else
-                                            newArticle
-                                    )
-                    in
-                    App.pure { model | articles = Just (Ok { collection | articles = newCollection }) }
+                    App.pure
+                        { model
+                            | articles = Just (Ok (Article.replaceArticle newArticle collection))
+                        }
 
                 -- TODO handle err
                 ( Err _, _ ) ->

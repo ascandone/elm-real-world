@@ -7,10 +7,9 @@ import Url.Parser as Parser exposing ((</>), Parser, map, s, string, top)
 type Route
     = Home
     | Profile String
+    | Article String
     | Login
     | Register
-    | ViewArticle String
-    | ViewProfile String
     | NewPost
     | Editor String
     | Settings
@@ -31,11 +30,8 @@ toHref route =
         Profile username ->
             "#/profile/" ++ username
 
-        ViewArticle slug ->
+        Article slug ->
             "#/article/" ++ slug
-
-        ViewProfile username ->
-            "#/profile/" ++ username
 
         NewPost ->
             "#/editor"
@@ -54,8 +50,8 @@ parser =
         , map Profile <| s "profile" </> string
         , map Login <| s "login"
         , map Register <| s "register"
-        , map ViewArticle <| s "article" </> string
-        , map ViewProfile <| s "profile" </> string
+        , map Article <| s "article" </> string
+        , map Profile <| s "profile" </> string
         , map NewPost <| s "editor"
         , map Editor <| s "editor" </> string
         , map Settings <| s "settings"

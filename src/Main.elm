@@ -120,25 +120,22 @@ update msg model =
                 Just Route.Login ->
                     handleInit Page.Login LoginMsg Page.Login.init
 
-                Just Register ->
+                Just Route.Register ->
                     handleInit Page.Register RegisterMsg Page.Register.init
 
-                Just (Profile username) ->
-                    handleInit Page.Profile ProfileMsg Page.Profile.init
+                Just (Route.Profile username) ->
+                    handleInit Page.Profile ProfileMsg (Page.Profile.init { username = username })
 
-                Just (ViewArticle slug) ->
+                Just (Route.Article slug) ->
                     handleInit Page.Article ArticleMsg (Page.Article.init slug)
 
-                Just (ViewProfile username) ->
-                    Debug.todo "profile"
-
-                Just NewPost ->
+                Just Route.NewPost ->
                     Debug.todo "newpost"
 
-                Just (Editor slug) ->
+                Just (Route.Editor slug) ->
                     Debug.todo "editor"
 
-                Just Settings ->
+                Just Route.Settings ->
                     Debug.todo "settings"
 
         ( Page.Home subModel, HomeMsg subMsg ) ->

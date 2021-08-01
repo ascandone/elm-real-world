@@ -9,10 +9,6 @@ import Page exposing (Page)
 import Route exposing (Route)
 
 
-
--- TODO complete
-
-
 isLinkActive : Route -> Page -> Bool
 isLinkActive route page =
     case ( route, page ) of
@@ -34,7 +30,7 @@ isLinkActive route page =
         ( Route.Editor _, Page.Editor _ ) ->
             True
 
-        ( Route.ViewArticle _, Page.Article _ ) ->
+        ( Route.Article _, Page.Article _ ) ->
             True
 
         ( Route.Profile _, Page.Profile _ ) ->

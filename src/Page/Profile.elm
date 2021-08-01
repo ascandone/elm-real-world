@@ -7,10 +7,17 @@ module Page.Profile exposing
     , view
     )
 
+import Api
+import Api.Articles
+import Api.Profiles.Username_
 import App
+import Data.Async as Async exposing (Async(..))
+import Data.Profile exposing (Profile)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events as E
+import Misc
+import View.FollowButton
 
 
 type alias Event =
@@ -18,51 +25,58 @@ type alias Event =
 
 
 type alias Model =
-    {}
+    { username : String
+    , asyncProfile : Async Profile
+    }
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( {}
-    , Cmd.none
+init : { username : String } -> ( Model, Cmd Msg )
+init { username } =
+    ( { username = username
+      , asyncProfile = Pending
+      }
+    , Cmd.batch
+        [ Api.Profiles.Username_.get username |> Api.send (GotProfile username)
+        ]
     )
 
 
 type Msg
-    = Noop
+    = GotProfile String (Api.Response Profile)
+    | ClickedFollow
 
 
 update : Msg -> Model -> ( Model, Cmd Msg, Maybe Event )
 update msg model =
     case msg of
-        _ ->
-            App.pure model
+        GotProfile username res ->
+            if username /= model.username then
+                App.pure model
+
+            else
+                App.pure { model | asyncProfile = Async.fromResponse res }
+                    |> App.withCmd (Api.logIfError res)
+
+        ClickedFollow ->
+            Debug.todo "clickedFollow"
 
 
 view : Model -> ( Maybe String, Html Msg )
 view model =
-    ( Nothing
-      --TODO
+    ( Just <|
+        case model.asyncProfile of
+            Async.GotData { username } ->
+                username
+
+            _ ->
+                "Profile"
     , div [ class "profile-page" ]
-        [ div [ class "user-info" ]
-            [ div [ class "container" ]
-                [ div [ class "row" ]
-                    [ div [ class "col-xs-12 col-md-10 offset-md-1" ]
-                        [ img [ class "user-img", A.src "http://i.imgur.com/Qr71crq.jpg" ]
-                            []
-                        , h4 []
-                            [ text "Eric Simons" ]
-                        , p []
-                            [ text "Cofounder @GoThinkster, lived in Aol's HQ for a few months, kinda looks like Peeta from the Hunger Games          " ]
-                        , button [ class "btn btn-sm btn-outline-secondary action-btn" ]
-                            [ i [ class "ion-plus-round" ]
-                                []
-                            , text "             Follow Eric Simons           "
-                            ]
-                        ]
-                    ]
-                ]
-            ]
+        [ case model.asyncProfile of
+            Async.GotData profile ->
+                viewUserInfo profile
+
+            _ ->
+                text ""
         , div [ class "container" ]
             [ div [ class "row" ]
                 [ div [ class "col-xs-12 col-md-10 offset-md-1" ]
@@ -78,68 +92,32 @@ view model =
                                 ]
                             ]
                         ]
-                    , div [ class "article-preview" ]
-                        [ div [ class "article-meta" ]
-                            [ a [ A.href "" ]
-                                [ img [ A.src "http://i.imgur.com/Qr71crq.jpg" ]
-                                    []
-                                ]
-                            , div [ class "info" ]
-                                [ a [ class "author", A.href "" ]
-                                    [ text "Eric Simons" ]
-                                , span [ class "date" ]
-                                    [ text "January 20th" ]
-                                ]
-                            , button [ class "btn btn-outline-primary btn-sm pull-xs-right" ]
-                                [ i [ class "ion-heart" ]
-                                    []
-                                , text "29            "
-                                ]
-                            ]
-                        , a [ class "preview-link", A.href "" ]
-                            [ h1 []
-                                [ text "How to build webapps that scale" ]
-                            , p []
-                                [ text "This is the description for the post." ]
-                            , span []
-                                [ text "Read more..." ]
-                            ]
-                        ]
-                    , div [ class "article-preview" ]
-                        [ div [ class "article-meta" ]
-                            [ a [ A.href "" ]
-                                [ img [ A.src "http://i.imgur.com/N4VcUeJ.jpg" ]
-                                    []
-                                ]
-                            , div [ class "info" ]
-                                [ a [ class "author", A.href "" ]
-                                    [ text "Albert Pai" ]
-                                , span [ class "date" ]
-                                    [ text "January 20th" ]
-                                ]
-                            , button [ class "btn btn-outline-primary btn-sm pull-xs-right" ]
-                                [ i [ class "ion-heart" ]
-                                    []
-                                , text "32            "
-                                ]
-                            ]
-                        , a [ class "preview-link", A.href "" ]
-                            [ h1 []
-                                [ text "The song you won't ever stop singing. No matter how hard you try." ]
-                            , p []
-                                [ text "This is the description for the post." ]
-                            , span []
-                                [ text "Read more..." ]
-                            , ul [ class "tag-list" ]
-                                [ li [ class "tag-default tag-pill tag-outline" ]
-                                    [ text "Music" ]
-                                , li [ class "tag-default tag-pill tag-outline" ]
-                                    [ text "Song" ]
-                                ]
-                            ]
-                        ]
+                    , text "TODO article"
                     ]
                 ]
             ]
         ]
     )
+
+
+viewUserInfo : Profile -> Html Msg
+viewUserInfo profile =
+    div [ class "user-info" ]
+        [ div [ class "container" ]
+            [ div [ class "row" ]
+                [ div [ class "col-xs-12 col-md-10 offset-md-1" ]
+                    [ img [ class "user-img", A.src (Misc.defaultImage profile.image) ] []
+                    , h4 [] [ text profile.username ]
+                    , case profile.bio of
+                        Nothing ->
+                            text ""
+
+                        Just bio ->
+                            p [] [ text bio ]
+                    , View.FollowButton.view
+                        { onFollow = ClickedFollow }
+                        profile
+                    ]
+                ]
+            ]
+        ]

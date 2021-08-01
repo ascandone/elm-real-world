@@ -38,7 +38,7 @@ view_ ({ author } as article) =
                 , text (String.fromInt article.favoritesCount)
                 ]
             ]
-        , a [ A.href <| Route.toHref (Route.ViewArticle article.slug), class "preview-link" ]
+        , a [ A.href <| Route.toHref (Route.Article article.slug), class "preview-link" ]
             [ h1 [] [ text article.title ]
             , p [] [ text article.description ]
             , span [] [ text "Read more..." ]

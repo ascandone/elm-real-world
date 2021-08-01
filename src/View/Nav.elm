@@ -33,8 +33,8 @@ isLinkActive route page =
         ( Route.Article _, Page.Article _ ) ->
             True
 
-        ( Route.Profile _, Page.Profile _ ) ->
-            True
+        ( Route.Profile username1, Page.Profile { username } ) ->
+            username == username1
 
         _ ->
             False

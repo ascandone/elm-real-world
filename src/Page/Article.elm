@@ -243,10 +243,10 @@ viewCommentCard mUser article ({ author } as comment) =
             [ p [ class "card-text" ] [ text comment.body ]
             ]
         , div [ class "card-footer" ]
-            [ a [ class "comment-author", href (Route.toHref (Route.ViewProfile author.username)) ]
+            [ a [ class "comment-author", href (Route.toHref (Route.Profile author.username)) ]
                 [ img [ class "comment-author-img", A.src (Misc.defaultImage author.image) ] []
                 ]
-            , a [ class "comment-author", href (Route.toHref (Route.ViewProfile author.username)) ]
+            , a [ class "comment-author", href (Route.toHref (Route.Profile author.username)) ]
                 [ text author.username ]
             , span [ class "date-posted" ] [ text comment.createdAt ] -- TODO format
             , case mUser of

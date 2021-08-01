@@ -42,6 +42,19 @@ view_ ({ author } as article) =
             [ h1 [] [ text article.title ]
             , p [] [ text article.description ]
             , span [] [ text "Read more..." ]
+            , case article.tagList of
+                [] ->
+                    text ""
+
+                _ ->
+                    ul []
+                        (article.tagList
+                            |> List.map
+                                (\tag ->
+                                    li [ class "tag-default tag-pill tag-outline" ]
+                                        [ text tag ]
+                                )
+                        )
             ]
         ]
 

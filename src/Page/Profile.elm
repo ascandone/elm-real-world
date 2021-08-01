@@ -114,7 +114,12 @@ update { mUser, key } { username } msg model =
             App.pure model
 
         SetFeed feed ->
-            App.pure { model | feed = feed }
+            let
+                newModel =
+                    { model | feed = feed }
+            in
+            App.pure newModel
+                |> App.withCmd (fetchFeed username newModel.feed newModel.pagination)
 
         ToggleFavorite article ->
             case mUser of

@@ -32,7 +32,7 @@ author =
 
 favorited : String -> Param
 favorited =
-    Param << Builder.string "author"
+    Param << Builder.string "favorited"
 
 
 limit : Int -> Param

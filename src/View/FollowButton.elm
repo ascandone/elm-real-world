@@ -20,7 +20,7 @@ view { onFollow } profile =
 view_ : Profile -> Html Msg
 view_ profile =
     button
-        [ class "btn btn-sm"
+        [ class "btn btn-sm action-btn"
         , class <|
             if profile.following then
                 "btn-secondary"

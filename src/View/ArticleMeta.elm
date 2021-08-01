@@ -7,6 +7,7 @@ import Html.Events as E
 import Html.Lazy exposing (lazy)
 import Misc
 import Route
+import View.FollowButton
 
 
 type Msg
@@ -17,31 +18,13 @@ type Msg
 view_ : Article -> Html Msg
 view_ ({ author } as article) =
     div [ class "article-meta" ]
-        [ a [ A.href (Route.toHref <| Route.ViewProfile author.username) ]
+        [ a [ A.href (Route.toHref <| Route.Profile author.username) ]
             [ img [ A.src (Misc.defaultImage author.image) ] [] ]
         , div [ class "info" ]
-            [ a [ class "author", A.href (Route.toHref <| Route.ViewProfile author.username) ] [ text author.username ]
+            [ a [ class "author", A.href (Route.toHref <| Route.Profile author.username) ] [ text author.username ]
             , span [ class "date" ] [ text article.createdAt ] --TODO
             ]
-        , button
-            [ class "btn btn-sm"
-            , class <|
-                if author.following then
-                    "btn-secondary"
-
-                else
-                    "btn-outline-secondary"
-            , E.onClick ClickedFollow
-            ]
-            [ i [ class "ion-plus-round" ] []
-            , text <|
-                if author.following then
-                    "Unfollow "
-
-                else
-                    "Follow "
-            , text author.username
-            ]
+        , View.FollowButton.view { onFollow = ClickedFollow } author
         , button
             [ class "btn btn-sm"
             , class <|

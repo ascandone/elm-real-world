@@ -15,5 +15,5 @@ type Page
     | NewPost ()
     | Editor ()
     | Article Page.Article.Model
-    | Profile Page.Profile.Model
+    | Profile String Page.Profile.Model
     | NotFound

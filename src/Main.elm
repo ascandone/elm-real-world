@@ -63,7 +63,7 @@ type Msg
     | LoginMsg Page.Login.Msg
     | RegisterMsg Page.Register.Msg
     | ArticleMsg Page.Article.Msg
-    | ProfileMsg Page.Profile.Msg
+    | ProfileMsg String Page.Profile.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -124,7 +124,7 @@ update msg model =
                     handleInit Page.Register RegisterMsg Page.Register.init
 
                 Just (Route.Profile username) ->
-                    handleInit Page.Profile ProfileMsg (Page.Profile.init { username = username })
+                    handleInit (Page.Profile username) (ProfileMsg username) (Page.Profile.init { username = username })
 
                 Just (Route.Article slug) ->
                     handleInit Page.Article ArticleMsg (Page.Article.init slug)
@@ -177,11 +177,15 @@ update msg model =
                 (Page.Article.update model subMsg subModel)
                 never
 
-        ( Page.Profile subModel, ProfileMsg subMsg ) ->
-            handleUpdate Page.Profile
-                ProfileMsg
-                (Page.Profile.update subMsg subModel)
-                never
+        ( Page.Profile username subModel, ProfileMsg msgUsername subMsg ) ->
+            if username /= msgUsername then
+                ( model, Cmd.none )
+
+            else
+                handleUpdate (Page.Profile username)
+                    (ProfileMsg username)
+                    (Page.Profile.update subMsg subModel)
+                    never
 
         _ ->
             ( model, Cmd.none )
@@ -220,8 +224,8 @@ viewMain model =
         Page.Article subModel ->
             mapMsg ArticleMsg (Page.Article.view model subModel)
 
-        Page.Profile subModel ->
-            mapMsg ProfileMsg (Page.Profile.view subModel)
+        Page.Profile username subModel ->
+            mapMsg (ProfileMsg username) (Page.Profile.view subModel)
 
         Page.NotFound ->
             mapMsg never Page.NotFound.view

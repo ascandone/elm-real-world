@@ -26,28 +26,26 @@ type alias Event =
 
 
 type alias Model =
-    { username : String
-    , asyncProfile : Async Profile
+    { asyncProfile : Async Profile
     , asyncArticles : Async (List Article)
     }
 
 
 init : { username : String } -> ( Model, Cmd Msg )
 init { username } =
-    ( { username = username
-      , asyncProfile = Pending
+    ( { asyncProfile = Pending
       , asyncArticles = Pending
       }
     , Cmd.batch
-        [ Api.Profiles.Username_.get username |> Api.send (GotProfile username)
-        , Api.Articles.get [] |> Api.send (GotArticles username)
+        [ Api.Profiles.Username_.get username |> Api.send GotProfile
+        , Api.Articles.get [] |> Api.send GotArticles
         ]
     )
 
 
 type Msg
-    = GotProfile String (Api.Response Profile)
-    | GotArticles String (Api.Response Article.Collection)
+    = GotProfile (Api.Response Profile)
+    | GotArticles (Api.Response Article.Collection)
     | ClickedFollow
     | ToggleFavorite
 
@@ -58,18 +56,14 @@ update msg model =
         ToggleFavorite ->
             Debug.todo "toggle fav"
 
-        GotProfile username res ->
-            if username /= model.username then
-                App.pure model
-
-            else
-                App.pure { model | asyncProfile = Async.fromResponse res }
-                    |> App.withCmd (Api.logIfError res)
+        GotProfile res ->
+            App.pure { model | asyncProfile = Async.fromResponse res }
+                |> App.withCmd (Api.logIfError res)
 
         ClickedFollow ->
             Debug.todo "clickedFollow"
 
-        GotArticles _ _ ->
+        GotArticles _ ->
             Debug.todo "gotArticles"
 
 

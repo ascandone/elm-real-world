@@ -9,11 +9,12 @@ module Page.Profile exposing
 
 import Api
 import Api.Articles exposing (limit)
+import Api.Articles.Slug_.Favorite
 import Api.Profiles.Username_
 import Api.Profiles.Username_.Follow
 import App
 import Browser.Navigation
-import Data.Article as Article exposing (Collection)
+import Data.Article as Article exposing (Article, Collection)
 import Data.Async as Async exposing (Async(..))
 import Data.Profile exposing (Profile)
 import Data.User exposing (User)
@@ -90,11 +91,12 @@ type Msg
     = GotProfile (Api.Response Profile)
     | GotArticles (Api.Response Article.Collection)
     | ClickedFollow Profile
-    | ToggleFavorite
+    | ToggleFavorite Article
     | SetFeed Feed
     | SelectedPagination View.Pagination.Pagination
     | SetViewport
     | GotFollowResponse (Api.Response Profile)
+    | GotFavoriteResponse (Api.Response Article)
 
 
 update :
@@ -114,8 +116,40 @@ update { mUser, key } { username } msg model =
         SetFeed feed ->
             App.pure { model | feed = feed }
 
-        ToggleFavorite ->
-            Debug.todo "toggle fav"
+        ToggleFavorite article ->
+            case mUser of
+                Nothing ->
+                    App.pure model
+                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Login))
+
+                Just user ->
+                    let
+                        action =
+                            if article.favorited then
+                                Api.Articles.Slug_.Favorite.delete
+
+                            else
+                                Api.Articles.Slug_.Favorite.post
+                    in
+                    App.pure model
+                        |> App.withCmd (action user article.slug |> Api.send GotFavoriteResponse)
+
+        GotFavoriteResponse res ->
+            case res of
+                Err err ->
+                    App.pure model
+                        |> App.withCmd (Api.logError err)
+
+                Ok newArticle ->
+                    case model.asyncArticles of
+                        Async.GotData collection ->
+                            App.pure
+                                { model
+                                    | asyncArticles = GotData (Article.replaceArticle newArticle collection)
+                                }
+
+                        _ ->
+                            App.pure model
 
         GotProfile res ->
             App.pure { model | asyncProfile = Async.fromResponse res }
@@ -125,7 +159,7 @@ update { mUser, key } { username } msg model =
             case mUser of
                 Nothing ->
                     App.pure model
-                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Home))
+                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Login))
 
                 Just user ->
                     let

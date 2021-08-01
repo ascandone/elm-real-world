@@ -59,8 +59,8 @@ view_ ({ author } as article) =
         ]
 
 
-view : { r | onToggleFavorite : msg } -> Article -> Html msg
+view : { r | onToggleFavorite : Article -> msg } -> Article -> Html msg
 view { onToggleFavorite } article =
     Html.map
-        (\ToggledFavorite -> onToggleFavorite)
+        (\ToggledFavorite -> onToggleFavorite article)
         (lazy view_ article)

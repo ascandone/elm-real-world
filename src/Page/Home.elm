@@ -241,10 +241,8 @@ view { mUser } model =
                             Just (Ok collection) ->
                                 List.concat
                                     [ List.map
-                                        (\article ->
-                                            View.ArticlePreview.view
-                                                { onToggleFavorite = ToggleFavoriteArticle mUser article }
-                                                article
+                                        (View.ArticlePreview.view
+                                            { onToggleFavorite = ToggleFavoriteArticle mUser }
                                         )
                                         collection.articles
                                     , [ View.Pagination.view

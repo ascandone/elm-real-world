@@ -20,7 +20,6 @@ import Html.Attributes as A exposing (class)
 import Html.Events as E
 import Html.Lazy exposing (lazy2)
 import Misc exposing (jumpToTop)
-import Ports
 import Route
 import View.ArticlePreview
 import View.NavPills

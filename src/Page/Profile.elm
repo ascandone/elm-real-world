@@ -8,37 +8,76 @@ module Page.Profile exposing
     )
 
 import Api
-import Api.Articles
+import Api.Articles exposing (limit)
 import Api.Profiles.Username_
 import App
-import Data.Article as Article exposing (Article)
+import Data.Article as Article exposing (Collection)
 import Data.Async as Async exposing (Async(..))
 import Data.Profile exposing (Profile)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
-import Misc
+import Misc exposing (jumpToTop)
 import View.ArticlePreview
 import View.FollowButton
+import View.NavPills
+import View.Pagination exposing (Pagination)
 
 
 type alias Event =
     Never
 
 
+type Feed
+    = MyArticles
+    | FavoriteArticles
+
+
 type alias Model =
     { asyncProfile : Async Profile
-    , asyncArticles : Async (List Article)
+    , asyncArticles : Async Collection
+    , feed : Feed
+    , pagination : Pagination
     }
+
+
+fetchFeed : String -> Feed -> Pagination -> Cmd Msg
+fetchFeed username feed pagination =
+    let
+        { offset, limit } =
+            View.Pagination.getData pagination
+
+        params =
+            List.append
+                [ Api.Articles.limit limit
+                , Api.Articles.offset offset
+                ]
+                (case feed of
+                    MyArticles ->
+                        [ Api.Articles.author username
+                        ]
+
+                    FavoriteArticles ->
+                        [ Api.Articles.favorited username
+                        ]
+                )
+    in
+    Api.Articles.get params |> Api.send GotArticles
 
 
 init : { username : String } -> ( Model, Cmd Msg )
 init { username } =
-    ( { asyncProfile = Pending
-      , asyncArticles = Pending
-      }
+    let
+        model =
+            { asyncProfile = Pending
+            , asyncArticles = Pending
+            , feed = MyArticles
+            , pagination = View.Pagination.init { pageSize = 10 }
+            }
+    in
+    ( model
     , Cmd.batch
         [ Api.Profiles.Username_.get username |> Api.send GotProfile
-        , Api.Articles.get [] |> Api.send GotArticles
+        , fetchFeed username model.feed model.pagination
         ]
     )
 
@@ -48,11 +87,20 @@ type Msg
     | GotArticles (Api.Response Article.Collection)
     | ClickedFollow
     | ToggleFavorite
+    | SetFeed Feed
+    | SelectedPagination View.Pagination.Pagination
+    | SetViewport
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, Maybe Event )
-update msg model =
+update : { username : String } -> Msg -> Model -> ( Model, Cmd Msg, Maybe Event )
+update { username } msg model =
     case msg of
+        SetViewport ->
+            App.pure model
+
+        SetFeed feed ->
+            App.pure { model | feed = feed }
+
         ToggleFavorite ->
             Debug.todo "toggle fav"
 
@@ -63,8 +111,13 @@ update msg model =
         ClickedFollow ->
             Debug.todo "clickedFollow"
 
-        GotArticles _ ->
-            Debug.todo "gotArticles"
+        GotArticles res ->
+            App.pure { model | asyncArticles = Async.fromResponse res }
+                |> App.withCmd (jumpToTop SetViewport)
+
+        SelectedPagination pagination ->
+            App.pure { model | pagination = pagination }
+                |> App.withCmd (fetchFeed username model.feed model.pagination)
 
 
 view : Model -> ( Maybe String, Html Msg )
@@ -88,15 +141,10 @@ view model =
                 [ div [ class "col-xs-12 col-md-10 offset-md-1" ] <|
                     List.append
                         [ div [ class "articles-toggle" ]
-                            [ ul [ class "nav nav-pills outline-active" ]
-                                [ li [ class "nav-item" ]
-                                    [ a [ class "nav-link active", A.href "" ]
-                                        [ text "My Articles" ]
-                                    ]
-                                , li [ class "nav-item" ]
-                                    [ a [ class "nav-link", A.href "" ]
-                                        [ text "Favorited Articles" ]
-                                    ]
+                            [ View.NavPills.view model.feed
+                                { onSelected = SetFeed }
+                                [ { item = MyArticles, text = "My Articles" }
+                                , { item = FavoriteArticles, text = "Favorite Articles" }
                                 ]
                             ]
                         ]
@@ -104,12 +152,20 @@ view model =
                             Pending ->
                                 [ text "Loading..." ]
 
-                            GotData articles ->
-                                articles
-                                    |> List.map
-                                        (View.ArticlePreview.view
-                                            { onToggleFavorite = ToggleFavorite }
-                                        )
+                            GotData collection ->
+                                List.append
+                                    (collection.articles
+                                        |> List.map
+                                            (View.ArticlePreview.view
+                                                { onToggleFavorite = ToggleFavorite }
+                                            )
+                                    )
+                                    [ View.Pagination.view
+                                        { articlesCount = collection.articlesCount
+                                        , pagination = model.pagination
+                                        , onSelected = SelectedPagination
+                                        }
+                                    ]
 
                             GotErr _ ->
                                 Debug.todo "handle err"

@@ -189,15 +189,19 @@ subscriptions _ =
 
 viewMain : Model -> ( Maybe String, Html Msg )
 viewMain model =
+    let
+        mapMsg toMsg ( title, h ) =
+            ( title, Html.map toMsg h )
+    in
     case model.page of
         Page.Home subModel ->
-            ( Nothing, Html.map HomeMsg <| Page.Home.view model subModel )
+            mapMsg HomeMsg (Page.Home.view model subModel)
 
         Page.Login subModel ->
-            ( Just "Login", Html.map LoginMsg <| Page.Login.view subModel )
+            mapMsg LoginMsg (Page.Login.view subModel)
 
         Page.Register subModel ->
-            ( Just "Register", Html.map RegisterMsg <| Page.Register.view subModel )
+            mapMsg RegisterMsg (Page.Register.view subModel)
 
         Page.Settings subModel ->
             Debug.todo "page view"
@@ -209,13 +213,13 @@ viewMain model =
             Debug.todo "page view"
 
         Page.Article subModel ->
-            ( Just "Article", Html.map ArticleMsg <| Page.Article.view model subModel )
+            mapMsg ArticleMsg (Page.Article.view model subModel)
 
         Page.Profile subModel ->
             Debug.todo "page view"
 
         Page.NotFound ->
-            ( Just "Not found", Page.NotFound.view )
+            mapMsg never Page.NotFound.view
 
 
 view : Model -> Browser.Document Msg

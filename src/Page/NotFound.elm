@@ -3,6 +3,6 @@ module Page.NotFound exposing (..)
 import Html exposing (..)
 
 
-view : Html msg
+view : ( Maybe String, Html msg )
 view =
-    text "Not found"
+    ( Just "Not found", text "Not found" )

@@ -267,9 +267,15 @@ viewCommentCard mUser article ({ author } as comment) =
         ]
 
 
-view : { r | mUser : Maybe User } -> Model -> Html Msg
+view : { r | mUser : Maybe User } -> Model -> ( Maybe String, Html Msg )
 view { mUser } model =
-    case model.asyncArticle of
+    ( case model.asyncArticle of
+        Just (Ok article) ->
+            Just article.title
+
+        _ ->
+            Just "Article"
+    , case model.asyncArticle of
         Nothing ->
             text "Loading..."
 
@@ -328,3 +334,4 @@ view { mUser } model =
                         ]
                     ]
                 ]
+    )

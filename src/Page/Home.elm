@@ -222,9 +222,10 @@ viewFeedToggle mUser feed =
         ]
 
 
-view : { r | mUser : Maybe User } -> Model -> Html Msg
+view : { r | mUser : Maybe User } -> Model -> ( Maybe String, Html Msg )
 view { mUser } model =
-    div [ class "home-page" ]
+    ( Nothing
+    , div [ class "home-page" ]
         [ viewBanner
         , div [ class "container page" ]
             [ div [ class "row" ]
@@ -270,3 +271,4 @@ view { mUser } model =
                 ]
             ]
         ]
+    )

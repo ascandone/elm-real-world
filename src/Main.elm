@@ -132,7 +132,7 @@ update msg model =
                 Just Route.NewPost ->
                     Debug.todo "newpost"
 
-                Just (Route.Editor slug) ->
+                Just (Route.Editor _) ->
                     Debug.todo "editor"
 
                 Just Route.Settings ->
@@ -212,13 +212,13 @@ viewMain model =
         Page.Register subModel ->
             mapMsg RegisterMsg (Page.Register.view subModel)
 
-        Page.Settings subModel ->
+        Page.Settings _ ->
             Debug.todo "page view"
 
-        Page.NewPost subModel ->
+        Page.NewPost _ ->
             Debug.todo "page view"
 
-        Page.Editor subModel ->
+        Page.Editor _ ->
             Debug.todo "page view"
 
         Page.Article subModel ->

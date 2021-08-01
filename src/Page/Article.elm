@@ -16,7 +16,6 @@ import Api.Profiles.Username_.Follow
 import App
 import Browser.Navigation
 import Data.Article exposing (Article)
-import Data.Async exposing (Async)
 import Data.Comment exposing (Comment)
 import Data.Profile exposing (Profile)
 import Data.User exposing (User)

@@ -13,6 +13,7 @@ import Page.Article
 import Page.Home
 import Page.Login
 import Page.NotFound
+import Page.Profile
 import Page.Register
 import Ports
 import Route as Route exposing (Route(..))
@@ -62,6 +63,7 @@ type Msg
     | LoginMsg Page.Login.Msg
     | RegisterMsg Page.Register.Msg
     | ArticleMsg Page.Article.Msg
+    | ProfileMsg Page.Profile.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -122,7 +124,7 @@ update msg model =
                     handleInit Page.Register RegisterMsg Page.Register.init
 
                 Just (Profile username) ->
-                    Debug.todo "profile"
+                    handleInit Page.Profile ProfileMsg Page.Profile.init
 
                 Just (ViewArticle slug) ->
                     handleInit Page.Article ArticleMsg (Page.Article.init slug)
@@ -178,6 +180,12 @@ update msg model =
                 (Page.Article.update model subMsg subModel)
                 never
 
+        ( Page.Profile subModel, ProfileMsg subMsg ) ->
+            handleUpdate Page.Profile
+                ProfileMsg
+                (Page.Profile.update subMsg subModel)
+                never
+
         _ ->
             ( model, Cmd.none )
 
@@ -216,7 +224,7 @@ viewMain model =
             mapMsg ArticleMsg (Page.Article.view model subModel)
 
         Page.Profile subModel ->
-            Debug.todo "page view"
+            mapMsg ProfileMsg (Page.Profile.view subModel)
 
         Page.NotFound ->
             mapMsg never Page.NotFound.view

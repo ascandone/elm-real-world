@@ -29,10 +29,11 @@ encodeBody body =
         ]
 
 
-put : String -> PutBody -> Api.Internal.Request Article
-put slug body =
+put : User -> String -> PutBody -> Api.Internal.Request Article
+put user slug body =
     Api.Internal.put Article.decoderSingle [ "articles", slug ]
         |> Api.Internal.withBody (encodeBody body)
+        |> Api.Internal.withAuth user
 
 
 delete : User -> String -> Api.Internal.Request ()

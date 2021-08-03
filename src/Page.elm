@@ -1,6 +1,7 @@
 module Page exposing (Page(..))
 
 import Page.Article
+import Page.Editor
 import Page.Home
 import Page.Login
 import Page.NewPost
@@ -15,7 +16,7 @@ type Page
     | Register Page.Register.Model
     | Settings Page.Settings.Model
     | NewPost Page.NewPost.Model
-    | Editor ()
+    | Editor Page.Editor.Model
     | Article Page.Article.Model
     | Profile String Page.Profile.Model
     | NotFound

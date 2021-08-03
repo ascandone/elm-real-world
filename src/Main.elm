@@ -10,6 +10,7 @@ import Json.Decode exposing (decodeString)
 import Json.Encode as Enc
 import Page exposing (Page)
 import Page.Article
+import Page.Editor
 import Page.Home
 import Page.Login
 import Page.NewPost
@@ -68,6 +69,7 @@ type Msg
     | ProfileMsg String Page.Profile.Msg
     | SettingsMsg Page.Settings.Msg
     | NewPostMsg Page.NewPost.Msg
+    | EditorMsg Page.Editor.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -136,8 +138,8 @@ update msg model =
                 Just Route.NewPost ->
                     handleInit Page.NewPost NewPostMsg Page.NewPost.init
 
-                Just (Route.Editor _) ->
-                    Debug.todo "editor"
+                Just (Route.Editor slug) ->
+                    handleInit Page.Editor EditorMsg Page.Editor.init
 
                 Just Route.Settings ->
                     handleInit Page.Settings SettingsMsg (Page.Settings.init model)
@@ -203,6 +205,12 @@ update msg model =
                 (Page.NewPost.update model subMsg subModel)
                 never
 
+        ( Page.Editor subModel, EditorMsg subMsg ) ->
+            handleUpdate Page.Editor
+                EditorMsg
+                (Page.Editor.update model subMsg subModel)
+                never
+
         _ ->
             ( model, Cmd.none )
 
@@ -234,8 +242,8 @@ viewMain model =
         Page.NewPost subModel ->
             mapMsg NewPostMsg (Page.NewPost.view model subModel)
 
-        Page.Editor _ ->
-            Debug.todo "page view"
+        Page.Editor subModel ->
+            mapMsg EditorMsg (Page.Editor.view model subModel)
 
         Page.Article subModel ->
             mapMsg ArticleMsg (Page.Article.view model subModel)

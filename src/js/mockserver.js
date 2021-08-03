@@ -69,11 +69,16 @@ createServer({
     this.namespace = "api";
 
     this.get("/articles", () => articles);
+    this.post("/articles", () => ({ article: articles.articles[1] }));
+
     this.get("/articles/feed", () => articles);
+
+    this.get("/articles/:slug", () => ({ article: articles.articles[1] }));
+    this.delete("/articles/:slug", () => ({}));
+    this.put("/articles/:slug", () => ({ article: articles.articles[1] }));
 
     this.post("/articles/:slug/favorite", getFavoriteArticle(true));
     this.delete("/articles/:slug/favorite", getFavoriteArticle(false));
-    this.get("/articles/:slug", () => ({ article: articles.articles[1] }));
 
     this.get("/articles/:slug/comments", () => comments);
     this.post("/articles/:slug/comments", postComment);

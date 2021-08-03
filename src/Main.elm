@@ -101,7 +101,7 @@ onUrlChanged mRoute model =
             handleInit_ Page.NewPost NewPostMsg Page.NewPost.init
 
         Just (Route.Editor slug) ->
-            handleInit_ Page.Editor EditorMsg Page.Editor.init
+            handleInit_ (Page.Editor slug) EditorMsg (Page.Editor.init slug)
 
         Just Route.Settings ->
             handleInit_ Page.Settings SettingsMsg (Page.Settings.init model)
@@ -208,10 +208,10 @@ update msg model =
                 (Page.NewPost.update model subMsg subModel)
                 never
 
-        ( Page.Editor subModel, EditorMsg subMsg ) ->
-            handleUpdate Page.Editor
+        ( Page.Editor slug subModel, EditorMsg subMsg ) ->
+            handleUpdate (Page.Editor slug)
                 EditorMsg
-                (Page.Editor.update model subMsg subModel)
+                (Page.Editor.update model slug subMsg subModel)
                 never
 
         _ ->
@@ -245,7 +245,7 @@ viewMain model =
         Page.NewPost subModel ->
             mapMsg NewPostMsg (Page.NewPost.view model subModel)
 
-        Page.Editor subModel ->
+        Page.Editor _ subModel ->
             mapMsg EditorMsg (Page.Editor.view model subModel)
 
         Page.Article subModel ->

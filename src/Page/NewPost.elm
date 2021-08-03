@@ -24,7 +24,7 @@ type alias Model =
 
 type Msg
     = InputForm ArticleForm
-    | Submit User
+    | Submit User ArticleForm
     | SubmitResponse (Api.Response Article)
 
 
@@ -42,15 +42,12 @@ update { key } msg model =
         InputForm article ->
             App.pure { model | article = article }
 
-        Submit user ->
+        Submit user article ->
             let
-                { article } =
-                    model
-
                 postBody =
                     { title = article.title
-                    , description = article.title
-                    , body = article.title
+                    , description = article.description
+                    , body = article.body
                     , tagList =
                         case article.tags of
                             "" ->

@@ -7,10 +7,11 @@ module Page.Editor exposing
     )
 
 import Api
-import Api.Articles
+import Api.Articles.Slug_
 import App
 import Browser.Navigation
 import Data.Article exposing (Article)
+import Data.Async as Async exposing (Async(..))
 import Data.User exposing (User)
 import Html exposing (..)
 import Route
@@ -18,50 +19,60 @@ import View.Editor exposing (ArticleForm)
 
 
 type alias Model =
-    { article : ArticleForm
+    { article : Async ArticleForm
     }
 
 
 type Msg
     = InputForm ArticleForm
-    | Submit User
+    | GotArticleResponse (Api.Response Article)
+    | Submit User ArticleForm
     | SubmitResponse (Api.Response Article)
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( { article = View.Editor.emptyForm
+init : String -> ( Model, Cmd Msg )
+init slug =
+    ( { article = Async.Pending
       }
-    , Cmd.none
+    , Api.Articles.Slug_.get slug |> Api.send GotArticleResponse
     )
 
 
-update : { r | key : Browser.Navigation.Key } -> Msg -> Model -> ( Model, Cmd Msg, Maybe Never )
-update { key } msg model =
+articleToForm : Article -> ArticleForm
+articleToForm article =
+    { title = article.title
+    , description = article.description
+    , body = article.body
+    , tags = String.join " " article.tagList
+    }
+
+
+update : { r | key : Browser.Navigation.Key } -> String -> Msg -> Model -> ( Model, Cmd Msg, Maybe Never )
+update { key } slug msg model =
     case msg of
         InputForm article ->
-            App.pure { model | article = article }
+            App.pure { model | article = Async.GotData article }
 
-        Submit user ->
+        GotArticleResponse res ->
+            App.pure
+                { model
+                    | article =
+                        res
+                            |> Result.map articleToForm
+                            |> Async.fromResponse
+                }
+
+        Submit user article ->
             let
-                { article } =
-                    model
-
-                postBody =
-                    { title = article.title
-                    , description = article.title
-                    , body = article.title
-                    , tagList =
-                        case article.tags of
-                            "" ->
-                                Nothing
-
-                            str ->
-                                Just (String.split " " str)
+                --TODO tagList ?
+                putBody =
+                    { title = Just article.title
+                    , description = Just article.description
+                    , body = Just article.body
                     }
             in
             App.pure model
-                |> App.withCmd (Api.Articles.post user postBody |> Api.send SubmitResponse)
+                |> App.withCmd (Api.Articles.Slug_.put user slug putBody |> Api.send SubmitResponse)
 
         SubmitResponse res ->
             case res of
@@ -81,14 +92,20 @@ update { key } msg model =
 view : { r | mUser : Maybe User } -> Model -> ( Maybe String, Html Msg )
 view { mUser } model =
     ( Just "New Post"
-    , case mUser of
-        Nothing ->
+    , case ( mUser, model.article ) of
+        ( Nothing, _ ) ->
             Debug.todo "auth msg"
 
-        Just user ->
+        ( Just _, Async.Pending ) ->
+            text "Loading.."
+
+        ( Just _, Async.GotErr _ ) ->
+            Debug.todo "handle err msg"
+
+        ( Just user, Async.GotData article ) ->
             View.Editor.view
                 { onInput = InputForm
                 , onSubmit = Submit user
                 }
-                model.article
+                article
     )

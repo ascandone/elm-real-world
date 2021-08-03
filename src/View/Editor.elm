@@ -28,7 +28,7 @@ type alias ArticleForm =
 
 view :
     { onInput : ArticleForm -> msg
-    , onSubmit : msg
+    , onSubmit : ArticleForm -> msg
     }
     -> ArticleForm
     -> Html msg
@@ -37,7 +37,7 @@ view props article =
         [ div [ class "container page" ]
             [ div [ class "row" ]
                 [ div [ class "col-md-10 offset-md-1 col-xs-12" ]
-                    [ form [ onSubmit props.onSubmit ]
+                    [ form [ onSubmit (props.onSubmit article) ]
                         [ Html.map props.onInput <|
                             fieldset []
                                 [ fieldset [ class "form-group" ]

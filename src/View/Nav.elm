@@ -27,8 +27,8 @@ isLinkActive route page =
         ( Route.NewPost, Page.NewPost _ ) ->
             True
 
-        ( Route.Editor _, Page.Editor _ ) ->
-            True
+        ( Route.Editor slug, Page.Editor slug1 _ ) ->
+            slug == slug1
 
         ( Route.Article _, Page.Article _ ) ->
             True

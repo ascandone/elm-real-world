@@ -16,7 +16,7 @@ type Page
     | Register Page.Register.Model
     | Settings Page.Settings.Model
     | NewPost Page.NewPost.Model
-    | Editor Page.Editor.Model
+    | Editor String Page.Editor.Model
     | Article Page.Article.Model
     | Profile String Page.Profile.Model
     | NotFound

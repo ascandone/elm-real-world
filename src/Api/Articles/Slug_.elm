@@ -3,6 +3,7 @@ module Api.Articles.Slug_ exposing (PutBody, delete, get, put)
 import Api.Internal
 import Data.Article as Article exposing (Article)
 import Data.User exposing (User)
+import Json.Decode
 import Json.Encode as Enc exposing (Value)
 import Misc exposing (encodeMaybe)
 
@@ -30,11 +31,11 @@ encodeBody body =
 
 put : String -> PutBody -> Api.Internal.Request Article
 put slug body =
-    Api.Internal.get Article.decoderSingle [ "articles", slug ]
+    Api.Internal.put Article.decoderSingle [ "articles", slug ]
         |> Api.Internal.withBody (encodeBody body)
 
 
-delete : User -> String -> Api.Internal.Request Article
+delete : User -> String -> Api.Internal.Request ()
 delete user slug =
-    Api.Internal.get Article.decoderSingle [ "articles", slug ]
+    Api.Internal.delete (Json.Decode.succeed ()) [ "articles", slug ]
         |> Api.Internal.withAuth user

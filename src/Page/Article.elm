@@ -52,6 +52,8 @@ type Msg
     | GotCommentResponse (Api.Response Comment)
     | DeletedComment User String Int
     | GotDeleteCommentResponse Int (Api.Response ())
+    | ClickedDeleteArticle Article User
+    | GotDeleteArticleResponse (Api.Response ())
 
 
 init : String -> ( Model, Cmd Msg )
@@ -203,6 +205,23 @@ update { key, mUser } msg model =
                 _ ->
                     App.pure model
 
+        ClickedDeleteArticle article user ->
+            App.pure model
+                |> App.withCmd
+                    (Api.Articles.Slug_.delete user article.slug
+                        |> Api.send GotDeleteArticleResponse
+                    )
+
+        GotDeleteArticleResponse res ->
+            case res of
+                Ok () ->
+                    App.pure model
+                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Home))
+
+                Err err ->
+                    App.pure model
+                        |> App.withCmd (Api.logError err)
+
 
 viewCardCommentForm :
     { value : String
@@ -282,15 +301,21 @@ view { mUser } model =
             text "Error"
 
         Just (Ok article) ->
+            let
+                articleMeta =
+                    View.ArticleMeta.view
+                        { onClickedFavorite = ClickedFavorite
+                        , onClickedFollow = ClickedFollow
+                        , onClickedDeleteArticle = ClickedDeleteArticle article
+                        }
+                        mUser
+                        article
+            in
             div [ class "article-page" ]
                 [ div [ class "banner" ]
                     [ div [ class "container" ]
                         [ h1 [] [ text article.title ]
-                        , View.ArticleMeta.view
-                            { onClickedFavorite = ClickedFavorite
-                            , onClickedFollow = ClickedFollow
-                            }
-                            article
+                        , articleMeta
                         ]
                     ]
                 , div [ class "container page" ]
@@ -298,12 +323,7 @@ view { mUser } model =
                         [ Markdown.toHtml [ class "col-md-12" ] article.body ]
                     , hr [] []
                     , div [ class "article-actions" ]
-                        [ View.ArticleMeta.view
-                            { onClickedFavorite = ClickedFavorite
-                            , onClickedFollow = ClickedFollow
-                            }
-                            article
-                        ]
+                        [ articleMeta ]
                     , div [ class "row" ]
                         [ div [ class "col-xs-12 col-md-8 offset-md-2" ] <|
                             List.append

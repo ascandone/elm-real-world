@@ -85,6 +85,8 @@ createServer({
 
     this.get("/tags", () => ({ tags }));
 
+    this.get("/user", () => ({ user }));
+    this.put("/user", () => ({ user }));
     this.post("/users/login", () => ({ user }));
   },
 });

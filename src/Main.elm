@@ -15,6 +15,7 @@ import Page.Login
 import Page.NotFound
 import Page.Profile
 import Page.Register
+import Page.Settings
 import Ports
 import Route as Route exposing (Route(..))
 import Url
@@ -64,6 +65,7 @@ type Msg
     | RegisterMsg Page.Register.Msg
     | ArticleMsg Page.Article.Msg
     | ProfileMsg String Page.Profile.Msg
+    | SettingsMsg Page.Settings.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -136,7 +138,7 @@ update msg model =
                     Debug.todo "editor"
 
                 Just Route.Settings ->
-                    Debug.todo "settings"
+                    handleInit Page.Settings SettingsMsg Page.Settings.init
 
         ( Page.Home subModel, HomeMsg subMsg ) ->
             handleUpdate
@@ -187,6 +189,12 @@ update msg model =
                     (Page.Profile.update model { username = username } subMsg subModel)
                     never
 
+        ( Page.Settings subModel, SettingsMsg subMsg ) ->
+            handleUpdate Page.Settings
+                SettingsMsg
+                (Page.Settings.update subMsg subModel)
+                never
+
         _ ->
             ( model, Cmd.none )
 
@@ -212,8 +220,8 @@ viewMain model =
         Page.Register subModel ->
             mapMsg RegisterMsg (Page.Register.view subModel)
 
-        Page.Settings _ ->
-            Debug.todo "page view"
+        Page.Settings subModel ->
+            mapMsg SettingsMsg (Page.Settings.view subModel)
 
         Page.NewPost _ ->
             Debug.todo "page view"

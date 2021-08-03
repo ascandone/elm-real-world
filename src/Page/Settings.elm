@@ -1,6 +1,7 @@
 module Page.Settings exposing
     ( Model
     , Msg
+    , init
     , update
     , view
     )
@@ -18,6 +19,13 @@ type Msg
     = Noop
 
 
+init : ( Model, Cmd Msg )
+init =
+    ( {}
+    , Cmd.none
+    )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg, Maybe Never )
 update msg model =
     case msg of
@@ -25,9 +33,10 @@ update msg model =
             App.pure model
 
 
-view : Model -> Html Msg
+view : Model -> ( Maybe String, Html Msg )
 view _ =
-    div [ class "settings-page" ]
+    ( Just "Settings"
+    , div [ class "settings-page" ]
         [ div [ class "container page" ]
             [ div [ class "row" ]
                 [ div [ class "col-md-6 offset-md-3 col-xs-12" ]
@@ -83,3 +92,4 @@ view _ =
                 ]
             ]
         ]
+    )

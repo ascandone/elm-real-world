@@ -5,10 +5,12 @@ import Data.User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events as E
-import Html.Lazy exposing (lazy2)
+import Html.Lazy exposing (lazy3)
 import Misc
 import Route
+import Time
 import View.FollowButton
+import View.Posix
 
 
 type Msg
@@ -69,15 +71,15 @@ viewExternalArticleBtns ({ author } as article) =
     ]
 
 
-view_ : Maybe User -> Article -> Html Msg
-view_ mUser ({ author } as article) =
+view_ : Maybe Time.Zone -> Maybe User -> Article -> Html Msg
+view_ mTimeZone mUser ({ author } as article) =
     div [ class "article-meta" ]
         (List.append
             [ a [ A.href (Route.toHref <| Route.Profile author.username) ]
                 [ img [ A.src (Misc.defaultImage author.image) ] [] ]
             , div [ class "info" ]
                 [ a [ class "author", A.href (Route.toHref <| Route.Profile author.username) ] [ text author.username ]
-                , span [ class "date" ] [ text article.createdAt ] --TODO
+                , span [ class "date" ] [ View.Posix.view mTimeZone article.createdAt ]
                 ]
             ]
             (case mUser of
@@ -99,11 +101,12 @@ view :
     , onClickedFollow : msg
     , onClickedDeleteArticle : User -> msg
     }
+    -> Maybe Time.Zone
     -> Maybe User
     -> Article
     -> Html msg
-view props mUser article =
-    lazy2 view_ mUser article
+view props mTimeZone mUser article =
+    lazy3 view_ mTimeZone mUser article
         |> Html.map
             (\msg ->
                 case msg of

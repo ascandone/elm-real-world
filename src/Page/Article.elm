@@ -25,7 +25,9 @@ import Html.Events exposing (onClick, onInput)
 import Markdown
 import Misc exposing (defaultImage)
 import Route
+import Time
 import View.ArticleMeta
+import View.Posix
 
 
 type alias Event =
@@ -254,8 +256,8 @@ viewCardCommentForm props user =
         ]
 
 
-viewCommentCard : Maybe User -> Article -> Comment -> Html Msg
-viewCommentCard mUser article ({ author } as comment) =
+viewCommentCard : Maybe Time.Zone -> Maybe User -> Article -> Comment -> Html Msg
+viewCommentCard mTimeZone mUser article ({ author } as comment) =
     div [ class "card" ]
         [ div [ class "card-block" ]
             [ p [ class "card-text" ] [ text comment.body ]
@@ -266,7 +268,7 @@ viewCommentCard mUser article ({ author } as comment) =
                 ]
             , a [ class "comment-author", href (Route.toHref (Route.Profile author.username)) ]
                 [ text author.username ]
-            , span [ class "date-posted" ] [ text comment.createdAt ] -- TODO format
+            , span [ class "date-posted" ] [ View.Posix.view mTimeZone comment.createdAt ]
             , case mUser of
                 Nothing ->
                     text ""
@@ -285,8 +287,8 @@ viewCommentCard mUser article ({ author } as comment) =
         ]
 
 
-view : { r | mUser : Maybe User } -> Model -> ( Maybe String, Html Msg )
-view { mUser } model =
+view : { r | mUser : Maybe User, timeZone : Maybe Time.Zone } -> Model -> ( Maybe String, Html Msg )
+view { mUser, timeZone } model =
     ( case model.asyncArticle of
         Just (Ok article) ->
             Just article.title
@@ -308,6 +310,7 @@ view { mUser } model =
                         , onClickedFollow = ClickedFollow
                         , onClickedDeleteArticle = ClickedDeleteArticle article
                         }
+                        timeZone
                         mUser
                         article
             in
@@ -348,7 +351,7 @@ view { mUser } model =
 
                                     Just (Ok comments) ->
                                         comments
-                                            |> List.map (viewCommentCard mUser article)
+                                            |> List.map (viewCommentCard timeZone mUser article)
                                 )
                         ]
                     ]

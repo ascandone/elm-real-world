@@ -21,6 +21,7 @@ import Html.Events as E
 import Html.Lazy exposing (lazy2)
 import Misc exposing (jumpToTop)
 import Route
+import Time
 import View.ArticlePreview
 import View.NavPills
 import View.Pagination exposing (Pagination)
@@ -212,8 +213,8 @@ viewFeedToggle mUser feed =
         ]
 
 
-view : { r | mUser : Maybe User } -> Model -> ( Maybe String, Html Msg )
-view { mUser } model =
+view : { r | mUser : Maybe User, timeZone : Maybe Time.Zone } -> Model -> ( Maybe String, Html Msg )
+view { mUser, timeZone } model =
     ( Nothing
     , div [ class "home-page" ]
         [ viewBanner
@@ -234,6 +235,7 @@ view { mUser } model =
                                     [ List.map
                                         (View.ArticlePreview.view
                                             { onToggleFavorite = ToggleFavoriteArticle mUser }
+                                            timeZone
                                         )
                                         collection.articles
                                     , [ View.Pagination.view

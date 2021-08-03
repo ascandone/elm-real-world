@@ -14,3 +14,8 @@ withCmd cmd ( model, _, evt ) =
 withEvt : evt -> ( model, Cmd msg, Maybe evt ) -> ( model, Cmd msg, Maybe evt )
 withEvt evt ( model, cmd, _ ) =
     ( model, cmd, Just evt )
+
+
+batchWith : Cmd msg -> ( model, Cmd msg ) -> ( model, Cmd msg )
+batchWith cmd ( model, cmd1 ) =
+    ( model, Cmd.batch [ cmd, cmd1 ] )

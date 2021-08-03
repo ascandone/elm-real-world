@@ -7,8 +7,10 @@ module Data.Article exposing
     )
 
 import Data.Profile as Profile exposing (Profile)
+import Iso8601
 import Json.Decode exposing (Decoder, bool, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (required)
+import Time exposing (Posix)
 
 
 type alias Article =
@@ -17,8 +19,8 @@ type alias Article =
     , description : String
     , body : String
     , tagList : List String
-    , createdAt : String
-    , updatedAt : String
+    , createdAt : Posix
+    , updatedAt : Posix
     , favorited : Bool
     , favoritesCount : Int
     , author : Profile
@@ -33,8 +35,8 @@ decoder =
         |> required "description" string
         |> required "body" string
         |> required "tagList" (list string)
-        |> required "createdAt" string
-        |> required "updatedAt" string
+        |> required "createdAt" Iso8601.decoder
+        |> required "updatedAt" Iso8601.decoder
         |> required "favorited" bool
         |> required "favoritesCount" int
         |> required "author" Profile.decoder

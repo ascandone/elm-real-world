@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import App
 import Browser
 import Browser.Dom exposing (Error(..))
 import Browser.Navigation as Nav
@@ -19,6 +20,8 @@ import Page.Register
 import Page.Settings
 import Ports
 import Route as Route exposing (Route(..))
+import Task
+import Time
 import Url
 import View.Footer
 import View.Nav
@@ -40,6 +43,7 @@ type alias Model =
     { key : Nav.Key
     , page : Page
     , mUser : Maybe User
+    , timeZone : Maybe Time.Zone
     }
 
 
@@ -55,13 +59,16 @@ init flags url key =
     , mUser =
         flags.user
             |> Maybe.andThen (decodeString User.decoder >> Result.toMaybe)
+    , timeZone = Nothing
     }
         |> update (UrlChanged url)
+        |> App.batchWith (Task.perform GotTimeZone Time.here)
 
 
 type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url.Url
+    | GotTimeZone Time.Zone
     | HomeMsg Page.Home.Msg
     | LoginMsg Page.Login.Msg
     | RegisterMsg Page.Register.Msg
@@ -131,6 +138,11 @@ update msg model =
                     )
     in
     case ( model.page, msg ) of
+        ( _, GotTimeZone timeZone ) ->
+            ( { model | timeZone = Just timeZone }
+            , Cmd.none
+            )
+
         ( _, UrlRequested urlRequest ) ->
             case urlRequest of
                 Browser.Internal url ->
@@ -252,7 +264,7 @@ viewMain model =
             mapMsg ArticleMsg (Page.Article.view model subModel)
 
         Page.Profile username subModel ->
-            mapMsg (ProfileMsg username) (Page.Profile.view subModel)
+            mapMsg (ProfileMsg username) (Page.Profile.view model subModel)
 
         Page.NotFound ->
             mapMsg never Page.NotFound.view

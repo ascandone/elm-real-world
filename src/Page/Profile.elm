@@ -22,6 +22,7 @@ import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Misc exposing (jumpToTop)
 import Route
+import Time
 import View.ArticlePreview
 import View.FollowButton
 import View.NavPills
@@ -196,8 +197,8 @@ update { mUser, key } { username } msg model =
                 |> App.withCmd (fetchFeed username model.feed model.pagination)
 
 
-view : Model -> ( Maybe String, Html Msg )
-view model =
+view : { r | timeZone : Maybe Time.Zone } -> Model -> ( Maybe String, Html Msg )
+view { timeZone } model =
     ( Just <|
         case model.asyncProfile of
             Async.GotData { username } ->
@@ -234,6 +235,7 @@ view model =
                                         |> List.map
                                             (View.ArticlePreview.view
                                                 { onToggleFavorite = ToggleFavorite }
+                                                timeZone
                                             )
                                     )
                                     [ View.Pagination.view

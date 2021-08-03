@@ -5,24 +5,26 @@ import Data.Article exposing (Article)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events exposing (onClick)
-import Html.Lazy exposing (lazy)
+import Html.Lazy exposing (lazy2)
 import Misc exposing (defaultImage)
 import Route
+import Time
+import View.Posix
 
 
 type Msg
     = ToggledFavorite
 
 
-view_ : Article -> Html Msg
-view_ ({ author } as article) =
+view_ : Maybe Time.Zone -> Article -> Html Msg
+view_ timeZone ({ author } as article) =
     div [ class "article-preview" ]
         [ div [ class "article-meta" ]
             [ a [ A.href <| Route.toHref (Route.Profile author.username) ]
                 [ img [ A.src (defaultImage author.image) ] [] ]
             , div [ class "info" ]
                 [ a [ A.href <| Route.toHref (Route.Profile author.username), class "author" ] [ text author.username ]
-                , span [ class "date" ] [ text article.createdAt ] --TODO date
+                , span [ class "date" ] [ View.Posix.view timeZone article.createdAt ]
                 ]
             , button
                 [ onClick ToggledFavorite
@@ -59,8 +61,8 @@ view_ ({ author } as article) =
         ]
 
 
-view : { r | onToggleFavorite : Article -> msg } -> Article -> Html msg
-view { onToggleFavorite } article =
+view : { r | onToggleFavorite : Article -> msg } -> Maybe Time.Zone -> Article -> Html msg
+view { onToggleFavorite } timeZone article =
     Html.map
         (\ToggledFavorite -> onToggleFavorite article)
-        (lazy view_ article)
+        (lazy2 view_ timeZone article)

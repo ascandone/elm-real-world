@@ -263,22 +263,11 @@ view model =
 viewFooter : Html msg
 viewFooter =
     footer []
-        [ div
-            [ class "container"
-            ]
-            [ a
-                [ A.href "/"
-                , class "logo-font"
-                ]
-                [ text "conduit" ]
-            , span
-                [ class "attribution"
-                ]
+        [ div [ class "container" ]
+            [ a [ A.href (Route.toHref Route.Home), class "logo-font" ] [ text "conduit" ]
+            , span [ class "attribution" ]
                 [ text "An interactive learning project from"
-                , a
-                    [ A.href "https://thinkster.io"
-                    ]
-                    [ text "Thinkster" ]
+                , a [ A.href "https://thinkster.io" ] [ text "Thinkster" ]
                 , text ". Code & design licensed under MIT."
                 ]
             ]

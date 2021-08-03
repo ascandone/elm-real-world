@@ -138,7 +138,7 @@ update msg model =
                     Debug.todo "editor"
 
                 Just Route.Settings ->
-                    handleInit Page.Settings SettingsMsg Page.Settings.init
+                    handleInit Page.Settings SettingsMsg (Page.Settings.init model)
 
         ( Page.Home subModel, HomeMsg subMsg ) ->
             handleUpdate

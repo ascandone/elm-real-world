@@ -1,13 +1,21 @@
-module View.Editor exposing (ArticleForm, view)
+module View.Editor exposing
+    ( ArticleForm
+    , emptyForm
+    , view
+    )
 
 import Html exposing (..)
 import Html.Attributes as A exposing (class, value)
 import Html.Events exposing (onInput, onSubmit)
 
 
-type Msg
-    = Submit
-    | InputForm ArticleForm
+emptyForm : ArticleForm
+emptyForm =
+    { title = ""
+    , description = ""
+    , body = ""
+    , tags = ""
+    }
 
 
 type alias ArticleForm =
@@ -18,14 +26,19 @@ type alias ArticleForm =
     }
 
 
-view : ArticleForm -> Html Msg
-view article =
+view :
+    { onInput : ArticleForm -> msg
+    , onSubmit : msg
+    }
+    -> ArticleForm
+    -> Html msg
+view props article =
     div [ class "editor-page" ]
         [ div [ class "container page" ]
             [ div [ class "row" ]
                 [ div [ class "col-md-10 offset-md-1 col-xs-12" ]
-                    [ form [ onSubmit Submit ]
-                        [ Html.map InputForm <|
+                    [ form [ onSubmit props.onSubmit ]
+                        [ Html.map props.onInput <|
                             fieldset []
                                 [ fieldset [ class "form-group" ]
                                     [ input

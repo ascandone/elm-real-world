@@ -12,6 +12,7 @@ import Page exposing (Page)
 import Page.Article
 import Page.Home
 import Page.Login
+import Page.NewPost
 import Page.NotFound
 import Page.Profile
 import Page.Register
@@ -66,6 +67,7 @@ type Msg
     | ArticleMsg Page.Article.Msg
     | ProfileMsg String Page.Profile.Msg
     | SettingsMsg Page.Settings.Msg
+    | NewPostMsg Page.NewPost.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -132,7 +134,7 @@ update msg model =
                     handleInit Page.Article ArticleMsg (Page.Article.init slug)
 
                 Just Route.NewPost ->
-                    Debug.todo "newpost"
+                    handleInit Page.NewPost NewPostMsg Page.NewPost.init
 
                 Just (Route.Editor _) ->
                     Debug.todo "editor"
@@ -195,6 +197,12 @@ update msg model =
                 (Page.Settings.update model subMsg subModel)
                 never
 
+        ( Page.NewPost subModel, NewPostMsg subMsg ) ->
+            handleUpdate Page.NewPost
+                NewPostMsg
+                (Page.NewPost.update model subMsg subModel)
+                never
+
         _ ->
             ( model, Cmd.none )
 
@@ -223,8 +231,8 @@ viewMain model =
         Page.Settings subModel ->
             mapMsg SettingsMsg (Page.Settings.view subModel)
 
-        Page.NewPost _ ->
-            Debug.todo "page view"
+        Page.NewPost subModel ->
+            mapMsg NewPostMsg (Page.NewPost.view model subModel)
 
         Page.Editor _ ->
             Debug.todo "page view"

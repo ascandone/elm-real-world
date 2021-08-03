@@ -27,18 +27,6 @@ import View.Footer
 import View.Nav
 
 
-main : Program Flags Model Msg
-main =
-    Browser.application
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        , onUrlRequest = UrlRequested
-        , onUrlChange = UrlChanged
-        }
-
-
 type alias Model =
     { key : Nav.Key
     , page : Page
@@ -57,8 +45,7 @@ init flags url key =
     { key = key
     , page = Page.NotFound
     , mUser =
-        flags.user
-            |> Maybe.andThen (decodeString User.decoder >> Result.toMaybe)
+        flags.user |> Maybe.andThen (decodeString User.decoder >> Result.toMaybe)
     , timeZone = Nothing
     }
         |> update (UrlChanged url)
@@ -117,25 +104,8 @@ onUrlChanged mRoute model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        handleUpdate : (subModel -> Page) -> (msg -> Msg) -> ( subModel, Cmd msg, Maybe evt ) -> (evt -> ( Model, Cmd Msg )) -> ( Model, Cmd Msg )
-        handleUpdate constr toMsg ( subModel, cmd, mEvt ) handleEvent =
-            case mEvt of
-                Nothing ->
-                    ( { model | page = constr subModel }
-                    , Cmd.map toMsg cmd
-                    )
-
-                Just evt ->
-                    let
-                        ( newModel, cmd1 ) =
-                            handleEvent evt
-                    in
-                    ( { newModel | page = constr subModel }
-                    , Cmd.batch
-                        [ Cmd.map toMsg cmd
-                        , cmd1
-                        ]
-                    )
+        handleUpdate_ =
+            handleUpdate model
     in
     case ( model.page, msg ) of
         ( _, GotTimeZone timeZone ) ->
@@ -160,14 +130,14 @@ update msg model =
             onUrlChanged (Route.parse url) model
 
         ( Page.Home subModel, HomeMsg subMsg ) ->
-            handleUpdate
+            handleUpdate_
                 Page.Home
                 HomeMsg
                 (Page.Home.update model subMsg subModel)
                 never
 
         ( Page.Login subModel, LoginMsg subMsg ) ->
-            handleUpdate Page.Login
+            handleUpdate_ Page.Login
                 LoginMsg
                 (Page.Login.update subMsg subModel)
                 (\(Page.Login.LoggedIn user) ->
@@ -180,7 +150,7 @@ update msg model =
                 )
 
         ( Page.Register subModel, RegisterMsg subMsg ) ->
-            handleUpdate Page.Register
+            handleUpdate_ Page.Register
                 RegisterMsg
                 (Page.Register.update subMsg subModel)
                 (\(Page.Register.Registered user) ->
@@ -193,7 +163,7 @@ update msg model =
                 )
 
         ( Page.Article subModel, ArticleMsg subMsg ) ->
-            handleUpdate Page.Article
+            handleUpdate_ Page.Article
                 ArticleMsg
                 (Page.Article.update model subMsg subModel)
                 never
@@ -203,25 +173,25 @@ update msg model =
                 ( model, Cmd.none )
 
             else
-                handleUpdate (Page.Profile username)
+                handleUpdate_ (Page.Profile username)
                     (ProfileMsg username)
                     (Page.Profile.update model { username = username } subMsg subModel)
                     never
 
         ( Page.Settings subModel, SettingsMsg subMsg ) ->
-            handleUpdate Page.Settings
+            handleUpdate_ Page.Settings
                 SettingsMsg
                 (Page.Settings.update model subMsg subModel)
                 never
 
         ( Page.NewPost subModel, NewPostMsg subMsg ) ->
-            handleUpdate Page.NewPost
+            handleUpdate_ Page.NewPost
                 NewPostMsg
                 (Page.NewPost.update model subMsg subModel)
                 never
 
         ( Page.Editor slug subModel, EditorMsg subMsg ) ->
-            handleUpdate (Page.Editor slug)
+            handleUpdate_ (Page.Editor slug)
                 EditorMsg
                 (Page.Editor.update model slug subMsg subModel)
                 never
@@ -270,19 +240,23 @@ viewMain model =
             mapMsg never Page.NotFound.view
 
 
+viewTitle : Maybe String -> String
+viewTitle mTitle =
+    case mTitle of
+        Nothing ->
+            "Conduit"
+
+        Just title ->
+            title ++ " | Conduit"
+
+
 view : Model -> Browser.Document Msg
 view model =
     let
         ( mTitle, body ) =
             viewMain model
     in
-    { title =
-        case mTitle of
-            Nothing ->
-                "Conduit"
-
-            Just title ->
-                title ++ " | Conduit"
+    { title = viewTitle mTitle
     , body =
         [ View.Nav.view model
         , body
@@ -291,8 +265,47 @@ view model =
     }
 
 
+main : Program Flags Model Msg
+main =
+    Browser.application
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        , onUrlRequest = UrlRequested
+        , onUrlChange = UrlChanged
+        }
+
+
 handleInit : Model -> (subModel -> Page) -> (msg -> Msg) -> ( subModel, Cmd msg ) -> ( Model, Cmd Msg )
 handleInit model constr toMsg ( subModel, cmd ) =
     ( { model | page = constr subModel }
     , Cmd.map toMsg cmd
     )
+
+
+handleUpdate :
+    Model
+    -> (subModel -> Page)
+    -> (msg -> Msg)
+    -> ( subModel, Cmd msg, Maybe evt )
+    -> (evt -> ( Model, Cmd Msg ))
+    -> ( Model, Cmd Msg )
+handleUpdate model constr toMsg ( subModel, cmd, mEvt ) handleEvent =
+    case mEvt of
+        Nothing ->
+            ( { model | page = constr subModel }
+            , Cmd.map toMsg cmd
+            )
+
+        Just evt ->
+            let
+                ( newModel, cmd1 ) =
+                    handleEvent evt
+            in
+            ( { newModel | page = constr subModel }
+            , Cmd.batch
+                [ Cmd.map toMsg cmd
+                , cmd1
+                ]
+            )

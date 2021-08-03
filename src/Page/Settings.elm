@@ -27,6 +27,16 @@ type alias SettingsForm =
     }
 
 
+getPutBody : SettingsForm -> Api.User.PutBody
+getPutBody settings =
+    { email = Just settings.email
+    , username = Just settings.username
+    , bio = Just settings.bio
+    , image = Just settings.image
+    , password = Just settings.password
+    }
+
+
 type alias Model =
     { asyncUserSettings : Async SettingsForm
     }
@@ -36,6 +46,7 @@ type Msg
     = GotUserResponse (Api.Response User)
     | InputForm SettingsForm
     | SubmitSettings SettingsForm
+    | GotSubmitResponse (Api.Response User)
 
 
 init : { r | mUser : Maybe User, key : Browser.Navigation.Key } -> ( Model, Cmd Msg )
@@ -61,8 +72,15 @@ getSettings user =
     }
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, Maybe Never )
-update msg model =
+update :
+    { r
+        | mUser : Maybe User
+        , key : Browser.Navigation.Key
+    }
+    -> Msg
+    -> Model
+    -> ( Model, Cmd Msg, Maybe Never )
+update { mUser, key } msg model =
     case msg of
         GotUserResponse res ->
             App.pure
@@ -74,11 +92,29 @@ update msg model =
                 }
                 |> App.withCmd (Api.logIfError res)
 
-        SubmitSettings _ ->
-            Debug.todo "submit"
+        SubmitSettings settings ->
+            case mUser of
+                Just user ->
+                    App.pure model
+                        |> App.withCmd (Api.User.put user (getPutBody settings) |> Api.send GotSubmitResponse)
+
+                Nothing ->
+                    App.pure model
+                        |> App.withCmd
+                            (Browser.Navigation.replaceUrl key (Route.toHref Route.Login))
 
         InputForm settings ->
             App.pure { model | asyncUserSettings = GotData settings }
+
+        GotSubmitResponse res ->
+            App.pure
+                { model
+                    | asyncUserSettings =
+                        res
+                            |> Result.map getSettings
+                            |> Data.Async.fromResponse
+                }
+                |> App.withCmd (Api.logIfError res)
 
 
 view : Model -> ( Maybe String, Html Msg )

@@ -192,7 +192,7 @@ update msg model =
         ( Page.Settings subModel, SettingsMsg subMsg ) ->
             handleUpdate Page.Settings
                 SettingsMsg
-                (Page.Settings.update subMsg subModel)
+                (Page.Settings.update model subMsg subModel)
                 never
 
         _ ->

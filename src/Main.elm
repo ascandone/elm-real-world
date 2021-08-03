@@ -4,8 +4,7 @@ import Browser
 import Browser.Dom exposing (Error(..))
 import Browser.Navigation as Nav
 import Data.User as User exposing (User)
-import Html exposing (..)
-import Html.Attributes as A exposing (class)
+import Html exposing (Html)
 import Json.Decode exposing (decodeString)
 import Json.Encode as Enc
 import Page exposing (Page)
@@ -21,6 +20,7 @@ import Page.Settings
 import Ports
 import Route as Route exposing (Route(..))
 import Url
+import View.Footer
 import View.Nav
 
 
@@ -72,15 +72,44 @@ type Msg
     | EditorMsg Page.Editor.Msg
 
 
+onUrlChanged : Maybe Route -> Model -> ( Model, Cmd Msg )
+onUrlChanged mRoute model =
+    let
+        handleInit_ =
+            handleInit model
+    in
+    case mRoute of
+        Nothing ->
+            handleInit_ (\() -> Page.NotFound) never ( (), Cmd.none )
+
+        Just Route.Home ->
+            handleInit_ Page.Home HomeMsg Page.Home.init
+
+        Just Route.Login ->
+            handleInit_ Page.Login LoginMsg Page.Login.init
+
+        Just Route.Register ->
+            handleInit_ Page.Register RegisterMsg Page.Register.init
+
+        Just (Route.Profile username) ->
+            handleInit_ (Page.Profile username) (ProfileMsg username) (Page.Profile.init { username = username })
+
+        Just (Route.Article slug) ->
+            handleInit_ Page.Article ArticleMsg (Page.Article.init slug)
+
+        Just Route.NewPost ->
+            handleInit_ Page.NewPost NewPostMsg Page.NewPost.init
+
+        Just (Route.Editor slug) ->
+            handleInit_ Page.Editor EditorMsg Page.Editor.init
+
+        Just Route.Settings ->
+            handleInit_ Page.Settings SettingsMsg (Page.Settings.init model)
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        handleInit : (subModel -> Page) -> (msg -> Msg) -> ( subModel, Cmd msg ) -> ( Model, Cmd Msg )
-        handleInit constr toMsg ( subModel, cmd ) =
-            ( { model | page = constr subModel }
-            , Cmd.map toMsg cmd
-            )
-
         handleUpdate : (subModel -> Page) -> (msg -> Msg) -> ( subModel, Cmd msg, Maybe evt ) -> (evt -> ( Model, Cmd Msg )) -> ( Model, Cmd Msg )
         handleUpdate constr toMsg ( subModel, cmd, mEvt ) handleEvent =
             case mEvt of
@@ -116,33 +145,7 @@ update msg model =
                     ( model, Nav.load href )
 
         ( _, UrlChanged url ) ->
-            case Route.parse url of
-                Nothing ->
-                    ( { model | page = Page.NotFound }, Cmd.none )
-
-                Just Route.Home ->
-                    handleInit Page.Home HomeMsg Page.Home.init
-
-                Just Route.Login ->
-                    handleInit Page.Login LoginMsg Page.Login.init
-
-                Just Route.Register ->
-                    handleInit Page.Register RegisterMsg Page.Register.init
-
-                Just (Route.Profile username) ->
-                    handleInit (Page.Profile username) (ProfileMsg username) (Page.Profile.init { username = username })
-
-                Just (Route.Article slug) ->
-                    handleInit Page.Article ArticleMsg (Page.Article.init slug)
-
-                Just Route.NewPost ->
-                    handleInit Page.NewPost NewPostMsg Page.NewPost.init
-
-                Just (Route.Editor slug) ->
-                    handleInit Page.Editor EditorMsg Page.Editor.init
-
-                Just Route.Settings ->
-                    handleInit Page.Settings SettingsMsg (Page.Settings.init model)
+            onUrlChanged (Route.parse url) model
 
         ( Page.Home subModel, HomeMsg subMsg ) ->
             handleUpdate
@@ -271,20 +274,13 @@ view model =
     , body =
         [ View.Nav.view model
         , body
-        , viewFooter
+        , View.Footer.view
         ]
     }
 
 
-viewFooter : Html msg
-viewFooter =
-    footer []
-        [ div [ class "container" ]
-            [ a [ A.href (Route.toHref Route.Home), class "logo-font" ] [ text "conduit" ]
-            , span [ class "attribution" ]
-                [ text "An interactive learning project from"
-                , a [ A.href "https://thinkster.io" ] [ text "Thinkster" ]
-                , text ". Code & design licensed under MIT."
-                ]
-            ]
-        ]
+handleInit : Model -> (subModel -> Page) -> (msg -> Msg) -> ( subModel, Cmd msg ) -> ( Model, Cmd Msg )
+handleInit model constr toMsg ( subModel, cmd ) =
+    ( { model | page = constr subModel }
+    , Cmd.map toMsg cmd
+    )

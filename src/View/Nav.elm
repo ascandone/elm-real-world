@@ -30,8 +30,8 @@ isLinkActive route page =
         ( Route.Editor slug, Page.Editor slug1 _ ) ->
             slug == slug1
 
-        ( Route.Article _, Page.Article _ ) ->
-            True
+        ( Route.Article slug, Page.Article slug1 _ ) ->
+            slug == slug1
 
         ( Route.Profile username1, Page.Profile username _ ) ->
             username == username1

@@ -59,7 +59,7 @@ type Msg
     | HomeMsg Page.Home.Msg
     | LoginMsg Page.Login.Msg
     | RegisterMsg Page.Register.Msg
-    | ArticleMsg Page.Article.Msg
+    | ArticleMsg String Page.Article.Msg
     | ProfileMsg String Page.Profile.Msg
     | SettingsMsg Page.Settings.Msg
     | NewPostMsg Page.NewPost.Msg
@@ -89,7 +89,7 @@ onUrlChanged mRoute model =
             handleInit_ (Page.Profile username) (ProfileMsg username) (Page.Profile.init { username = username })
 
         Just (Route.Article slug) ->
-            handleInit_ Page.Article ArticleMsg (Page.Article.init slug)
+            handleInit_ (Page.Article slug) (ArticleMsg slug) (Page.Article.init slug)
 
         Just Route.NewPost ->
             handleInit_ Page.NewPost NewPostMsg Page.NewPost.init
@@ -162,11 +162,15 @@ update msg model =
                     )
                 )
 
-        ( Page.Article subModel, ArticleMsg subMsg ) ->
-            handleUpdate_ Page.Article
-                ArticleMsg
-                (Page.Article.update model subMsg subModel)
-                never
+        ( Page.Article slug subModel, ArticleMsg msgSlug subMsg ) ->
+            if slug /= msgSlug then
+                ( model, Cmd.none )
+
+            else
+                handleUpdate_ (Page.Article slug)
+                    (ArticleMsg slug)
+                    (Page.Article.update model slug subMsg subModel)
+                    never
 
         ( Page.Profile username subModel, ProfileMsg msgUsername subMsg ) ->
             if username /= msgUsername then
@@ -230,8 +234,8 @@ viewMain model =
         Page.Editor _ subModel ->
             mapMsg EditorMsg (Page.Editor.view model subModel)
 
-        Page.Article subModel ->
-            mapMsg ArticleMsg (Page.Article.view model subModel)
+        Page.Article slug subModel ->
+            mapMsg (ArticleMsg slug) (Page.Article.view model subModel)
 
         Page.Profile username subModel ->
             mapMsg (ProfileMsg username) (Page.Profile.view model subModel)

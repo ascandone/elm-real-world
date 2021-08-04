@@ -35,8 +35,7 @@ type alias Event =
 
 
 type alias Model =
-    { slug : String
-    , asyncArticle : Maybe (Api.Response Article)
+    { asyncArticle : Maybe (Api.Response Article)
     , asyncComments : Maybe (Api.Response (List Comment))
     , comment : String
     }
@@ -52,7 +51,7 @@ type Msg
     | InputComment String
     | SubmitComment User
     | GotCommentResponse (Api.Response Comment)
-    | DeletedComment User String Int
+    | DeletedComment User Int
     | GotDeleteCommentResponse Int (Api.Response ())
     | ClickedDeleteArticle Article User
     | GotDeleteArticleResponse (Api.Response ())
@@ -60,8 +59,7 @@ type Msg
 
 init : String -> ( Model, Cmd Msg )
 init slug =
-    ( { slug = slug
-      , asyncArticle = Nothing
+    ( { asyncArticle = Nothing
       , asyncComments = Nothing
       , comment = ""
       }
@@ -77,10 +75,11 @@ update :
         | key : Browser.Navigation.Key
         , mUser : Maybe User
     }
+    -> String
     -> Msg
     -> Model
     -> ( Model, Cmd Msg, Maybe Event )
-update { key, mUser } msg model =
+update { key, mUser } slug msg model =
     case msg of
         GotComments res ->
             App.pure { model | asyncComments = Just res }
@@ -92,7 +91,7 @@ update { key, mUser } msg model =
         SubmitComment user ->
             App.pure model
                 |> App.withCmd
-                    (Api.Articles.Slug_.Comments.post user { body = model.comment } model.slug
+                    (Api.Articles.Slug_.Comments.post user { body = model.comment } slug
                         |> Api.send GotCommentResponse
                     )
 
@@ -184,7 +183,7 @@ update { key, mUser } msg model =
                 _ ->
                     App.pure model
 
-        DeletedComment user slug id ->
+        DeletedComment user id ->
             App.pure model
                 |> App.withCmd
                     (Api.Articles.Slug_.Comments.delete user slug id
@@ -256,8 +255,8 @@ viewCardCommentForm props user =
         ]
 
 
-viewCommentCard : Maybe Time.Zone -> Maybe User -> Article -> Comment -> Html Msg
-viewCommentCard mTimeZone mUser article ({ author } as comment) =
+viewCommentCard : Maybe Time.Zone -> Maybe User -> Comment -> Html Msg
+viewCommentCard mTimeZone mUser ({ author } as comment) =
     div [ class "card" ]
         [ div [ class "card-block" ]
             [ p [ class "card-text" ] [ text comment.body ]
@@ -280,7 +279,7 @@ viewCommentCard mTimeZone mUser article ({ author } as comment) =
                     else
                         span
                             [ class "mod-options"
-                            , onClick (DeletedComment user article.slug comment.id)
+                            , onClick (DeletedComment user comment.id)
                             ]
                             [ i [ class "ion-trash-a" ] [] ]
             ]
@@ -351,7 +350,7 @@ view { mUser, timeZone } model =
 
                                     Just (Ok comments) ->
                                         comments
-                                            |> List.map (viewCommentCard timeZone mUser article)
+                                            |> List.map (viewCommentCard timeZone mUser)
                                 )
                         ]
                     ]

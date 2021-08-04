@@ -17,6 +17,6 @@ type Page
     | Settings Page.Settings.Model
     | NewPost Page.NewPost.Model
     | Editor String Page.Editor.Model
-    | Article Page.Article.Model
+    | Article String Page.Article.Model
     | Profile String Page.Profile.Model
     | NotFound

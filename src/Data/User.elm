@@ -1,6 +1,7 @@
 module Data.User exposing (User, decoder, encode, specs)
 
 import Expect
+import Fuzz exposing (Fuzzer)
 import Iso8601 exposing (decoder)
 import Json.Decode as Dec exposing (Decoder, string)
 import Json.Decode.Pipeline exposing (required)
@@ -81,6 +82,16 @@ exampleUser =
     }
 
 
+fuzzer : Fuzzer User
+fuzzer =
+    Fuzz.constant User
+        |> Fuzz.andMap Fuzz.string
+        |> Fuzz.andMap Fuzz.string
+        |> Fuzz.andMap Fuzz.string
+        |> Fuzz.andMap Fuzz.string
+        |> Fuzz.andMap (Fuzz.maybe Fuzz.string)
+
+
 specs : Test
 specs =
     Test.concat
@@ -88,4 +99,6 @@ specs =
             \() -> Expect.equal (Dec.decodeString decoder exampleUserStr) (Ok exampleUser)
         , Test.test "encoding" <|
             \() -> Misc.expectIso decoder encode exampleUser
+        , Test.fuzz fuzzer "encoding iso fuzzing" <|
+            Misc.expectIso decoder encode
         ]

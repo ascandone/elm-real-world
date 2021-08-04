@@ -87,5 +87,5 @@ specs =
         [ Test.test "decoding example from docs" <|
             \() -> Expect.equal (Dec.decodeString decoder exampleUserStr) (Ok exampleUser)
         , Test.test "encoding" <|
-            \() -> Expect.equal (Dec.decodeString decoder <| Enc.encode 0 <| encode exampleUser) (Ok exampleUser)
+            \() -> Misc.expectIso decoder encode exampleUser
         ]

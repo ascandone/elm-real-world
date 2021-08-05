@@ -18,6 +18,7 @@ import Data.Article as Article exposing (Article, Collection)
 import Data.Async as Async exposing (Async(..))
 import Data.Profile exposing (Profile)
 import Data.User exposing (User)
+import Effect exposing (Effect)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Misc exposing (jumpToTop)
@@ -46,7 +47,7 @@ type alias Model =
     }
 
 
-fetchFeed : String -> Feed -> Pagination -> Cmd Msg
+fetchFeed : String -> Feed -> Pagination -> Effect Msg
 fetchFeed username feed pagination =
     let
         { offset, limit } =
@@ -70,7 +71,7 @@ fetchFeed username feed pagination =
     Api.Articles.get params |> Api.send GotArticles
 
 
-init : { username : String } -> ( Model, Cmd Msg )
+init : { username : String } -> ( Model, List (Effect Msg) )
 init { username } =
     let
         model =
@@ -81,10 +82,9 @@ init { username } =
             }
     in
     ( model
-    , Cmd.batch
-        [ Api.Profiles.Username_.get username |> Api.send GotProfile
-        , fetchFeed username model.feed model.pagination
-        ]
+    , [ Api.Profiles.Username_.get username |> Api.send GotProfile
+      , fetchFeed username model.feed model.pagination
+      ]
     )
 
 
@@ -108,7 +108,7 @@ update :
     -> { username : String }
     -> Msg
     -> Model
-    -> ( Model, Cmd Msg, Maybe Event )
+    -> ( Model, List (Effect Msg), Maybe Event )
 update { mUser, key } { username } msg model =
     case msg of
         SetViewport ->
@@ -120,13 +120,13 @@ update { mUser, key } { username } msg model =
                     { model | feed = feed }
             in
             App.pure newModel
-                |> App.withCmd (fetchFeed username newModel.feed newModel.pagination)
+                |> App.withEff (fetchFeed username newModel.feed newModel.pagination)
 
         ToggleFavorite article ->
             case mUser of
                 Nothing ->
                     App.pure model
-                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Login))
+                        |> App.withEff (Effect.NavPushUrl (Route.toHref Route.Login))
 
                 Just user ->
                     let
@@ -138,13 +138,13 @@ update { mUser, key } { username } msg model =
                                 Api.Articles.Slug_.Favorite.post
                     in
                     App.pure model
-                        |> App.withCmd (action user article.slug |> Api.send GotFavoriteResponse)
+                        |> App.withEff (action user article.slug |> Api.send GotFavoriteResponse)
 
         GotFavoriteResponse res ->
             case res of
                 Err err ->
                     App.pure model
-                        |> App.withCmd (Api.logError err)
+                        |> App.withEff (Api.logError err)
 
                 Ok newArticle ->
                     case model.asyncArticles of
@@ -159,13 +159,13 @@ update { mUser, key } { username } msg model =
 
         GotProfile res ->
             App.pure { model | asyncProfile = Async.fromResponse res }
-                |> App.withCmd (Api.logIfError res)
+                |> App.withEff (Api.logIfError res)
 
         ClickedFollow profile ->
             case mUser of
                 Nothing ->
                     App.pure model
-                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Login))
+                        |> App.withEff (Effect.NavPushUrl <| Route.toHref Route.Login)
 
                 Just user ->
                     let
@@ -177,7 +177,7 @@ update { mUser, key } { username } msg model =
                                 Api.Profiles.Username_.Follow.post
                     in
                     App.pure model
-                        |> App.withCmd (action user profile.username |> Api.send GotFollowResponse)
+                        |> App.withEff (action user profile.username |> Api.send GotFollowResponse)
 
         GotFollowResponse res ->
             case res of
@@ -186,15 +186,15 @@ update { mUser, key } { username } msg model =
 
                 Err err ->
                     App.pure model
-                        |> App.withCmd (Api.logError err)
+                        |> App.withEff (Api.logError err)
 
         GotArticles res ->
             App.pure { model | asyncArticles = Async.fromResponse res }
-                |> App.withCmd (jumpToTop SetViewport)
+                |> App.withEff (jumpToTop SetViewport)
 
         SelectedPagination pagination ->
             App.pure { model | pagination = pagination }
-                |> App.withCmd (fetchFeed username model.feed model.pagination)
+                |> App.withEff (fetchFeed username model.feed model.pagination)
 
 
 view : { r | timeZone : Maybe Time.Zone } -> Model -> ( Maybe String, Html Msg )

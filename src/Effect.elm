@@ -3,6 +3,7 @@ module Effect exposing (Effect(..), HttpRequest_, map, run)
 import Browser.Dom
 import Browser.Navigation
 import Http exposing (Body, Header)
+import Ports
 import Task
 
 
@@ -30,6 +31,21 @@ type Effect msg
 run : Browser.Navigation.Key -> Effect msg -> Cmd msg
 run key eff =
     case eff of
+        NavPushUrl str ->
+            Browser.Navigation.pushUrl key str
+
+        NavLoad str ->
+            Browser.Navigation.load str
+
+        PortLogError str ->
+            Ports.logError str
+
+        PortSerializeUser str ->
+            Ports.serializeUser str
+
+        Noop ->
+            Cmd.none
+
         Cmd cmd ->
             cmd
 
@@ -50,9 +66,6 @@ run key eff =
                 , timeout = Nothing
                 , tracker = Nothing
                 }
-
-        _ ->
-            Debug.todo "effect run"
 
 
 map : (a -> b) -> Effect a -> Effect b

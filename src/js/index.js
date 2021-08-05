@@ -1,5 +1,8 @@
 import { Elm } from "../Main.elm";
-import "./mockserver";
+
+if (process.env.NODE_ENV === "development") {
+  import("./mockserver");
+}
 
 const USER_NS = "user-ns";
 

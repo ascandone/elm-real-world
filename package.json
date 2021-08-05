@@ -1,10 +1,10 @@
 {
   "name": "elm-real-world",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
   "scripts": {
     "dev": "parcel ./index.html",
+    "build": "parcel build ./index.html",
     "test": "yarn elm-test src"
   },
   "devDependencies": {

@@ -5,6 +5,7 @@ import Browser.Navigation
 import Http exposing (Body, Header)
 import Ports
 import Task
+import Time
 
 
 type alias HttpRequest_ msg =
@@ -17,8 +18,7 @@ type alias HttpRequest_ msg =
 
 
 type Effect msg
-    = Cmd (Cmd msg)
-    | NavReplaceUrl String
+    = NavReplaceUrl String
     | NavPushUrl String
     | NavLoad String
     | HttpRequest (HttpRequest_ msg)
@@ -26,11 +26,15 @@ type Effect msg
     | PortSerializeUser String
     | Noop
     | BrowserSetViewport Float Float msg
+    | TimeHere (Time.Zone -> msg)
 
 
 run : Browser.Navigation.Key -> Effect msg -> Cmd msg
 run key eff =
     case eff of
+        TimeHere getMsg ->
+            Task.perform getMsg Time.here
+
         NavPushUrl str ->
             Browser.Navigation.pushUrl key str
 
@@ -45,9 +49,6 @@ run key eff =
 
         Noop ->
             Cmd.none
-
-        Cmd cmd ->
-            cmd
 
         BrowserSetViewport x y msg ->
             Browser.Dom.setViewport x y
@@ -71,8 +72,8 @@ run key eff =
 map : (a -> b) -> Effect a -> Effect b
 map mapper effect =
     case effect of
-        Cmd cmd ->
-            Cmd (Cmd.map mapper cmd)
+        TimeHere toMsg ->
+            TimeHere (toMsg >> mapper)
 
         NavReplaceUrl s ->
             NavReplaceUrl s

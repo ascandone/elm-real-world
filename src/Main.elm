@@ -19,7 +19,6 @@ import Page.Profile
 import Page.Register
 import Page.Settings
 import Route as Route exposing (Route(..))
-import Task
 import Time
 import Url
 import View.Footer
@@ -46,7 +45,7 @@ init flags url =
     , timeZone = Nothing
     }
         |> update (UrlChanged url)
-        |> App.batchWith (Effect.Cmd <| Task.perform GotTimeZone Time.here)
+        |> App.batchWith (Effect.TimeHere GotTimeZone)
 
 
 type Msg

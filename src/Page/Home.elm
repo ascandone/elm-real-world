@@ -285,8 +285,7 @@ matchArticles :
     }
     -> UP.Parser (Bool -> a) a
 matchArticles args =
-    UP.s "api"
-        </> UP.s "articles"
+    (UP.s "api" </> UP.s "articles")
         <?> UPQ.int "offset"
         <?> UPQ.int "limit"
         <?> UPQ.string "tag"

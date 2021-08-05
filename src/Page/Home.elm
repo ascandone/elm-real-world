@@ -59,47 +59,47 @@ initialPagination =
 
 init : ( Model, List (Effect Msg) )
 init =
-    ( { tags = Pending
-      , feedType = GlobalFeed
-      , pagination = initialPagination
-      , articles = Pending
-      }
+    let
+        model =
+            { tags = Pending
+            , feedType = GlobalFeed
+            , pagination = initialPagination
+            , articles = Pending
+            }
+    in
+    ( model
     , [ Api.Tags.get |> Api.send GotTags
-      , Api.Articles.get [] |> Api.send GotArticles
+      , fetchArticles model
       ]
     )
 
 
-fetchArticles : ( Model, List (Effect Msg), Maybe evt ) -> ( Model, List (Effect Msg), Maybe evt )
-fetchArticles (( model, _, _ ) as app) =
+fetchArticles : Model -> Effect Msg
+fetchArticles model =
     let
         data =
             View.Pagination.getData model.pagination
-
-        fetchEff =
-            Api.send GotArticles <|
-                case model.feedType of
-                    GlobalFeed ->
-                        Api.Articles.get
-                            [ Api.Articles.limit data.limit
-                            , Api.Articles.offset data.offset
-                            ]
-
-                    TagFeed tag ->
-                        Api.Articles.get
-                            [ Api.Articles.limit data.limit
-                            , Api.Articles.offset data.offset
-                            , Api.Articles.tag tag
-                            ]
-
-                    YourFeed user ->
-                        Api.Articles.Feed.get user
-                            [ Api.Articles.Feed.limit data.limit
-                            , Api.Articles.Feed.offset data.offset
-                            ]
     in
-    app
-        |> App.withEff fetchEff
+    Api.send GotArticles <|
+        case model.feedType of
+            GlobalFeed ->
+                Api.Articles.get
+                    [ Api.Articles.limit data.limit
+                    , Api.Articles.offset data.offset
+                    ]
+
+            TagFeed tag ->
+                Api.Articles.get
+                    [ Api.Articles.limit data.limit
+                    , Api.Articles.offset data.offset
+                    , Api.Articles.tag tag
+                    ]
+
+            YourFeed user ->
+                Api.Articles.Feed.get user
+                    [ Api.Articles.Feed.limit data.limit
+                    , Api.Articles.Feed.offset data.offset
+                    ]
 
 
 update : Msg -> Model -> ( Model, List (Effect Msg), Maybe Never )
@@ -119,11 +119,11 @@ update msg model =
 
         SelectedFeed feed ->
             App.pure { model | feedType = feed, pagination = initialPagination }
-                |> fetchArticles
+                |> App.withEff (fetchArticles model)
 
         SelectedPagination pagination ->
             App.pure { model | pagination = pagination }
-                |> fetchArticles
+                |> App.withEff (fetchArticles model)
 
         ToggleFavoriteArticle mUser article ->
             case mUser of

@@ -98,7 +98,7 @@ specs =
         [ Test.test "decoding example from docs" <|
             \() -> Expect.equal (Dec.decodeString decoder exampleUserStr) (Ok exampleUser)
         , Test.test "encoding" <|
-            \() -> Misc.expectIso decoder encode exampleUser
+            \() -> Misc.expectIsoEnc decoder encode exampleUser
         , Test.fuzz fuzzer "encoding iso fuzzing" <|
-            Misc.expectIso decoder encode
+            Misc.expectIsoEnc decoder encode
         ]

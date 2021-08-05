@@ -2,6 +2,8 @@ module Misc exposing (..)
 
 import Browser.Dom
 import Expect exposing (Expectation)
+import Fuzz
+import Http exposing (Expect)
 import Json.Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode exposing (Value)
@@ -34,7 +36,22 @@ encodeMaybe enc m =
             enc x
 
 
-expectIso : Decoder x -> (x -> Value) -> x -> Expectation
-expectIso decoder encode x =
+expectIsoExcMaybe : (x -> y) -> (y -> Maybe x) -> x -> Expectation
+expectIsoExcMaybe f g x =
+    case g (f x) of
+        Nothing ->
+            Expect.fail ("Unexpected Nothing" ++ Debug.toString x)
+
+        Just k ->
+            Expect.equal k x
+
+
+expectIsoEnc : Decoder x -> (x -> Value) -> x -> Expectation
+expectIsoEnc decoder encode x =
     Json.Decode.decodeValue decoder (encode x)
         |> Expect.equal (Ok x)
+
+
+fuzzNonEmptyStr : Fuzz.Fuzzer String
+fuzzNonEmptyStr =
+    Fuzz.map2 String.cons Fuzz.char Fuzz.string

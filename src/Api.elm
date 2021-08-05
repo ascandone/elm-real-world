@@ -11,7 +11,6 @@ import Api.Internal exposing (Request(..))
 import Effect exposing (Effect)
 import Http
 import Json.Decode as Dec exposing (Decoder)
-import Ports
 import Url.Builder
 
 
@@ -35,20 +34,20 @@ errToString _ =
     "TODO"
 
 
-logError : ResponseErr -> Cmd msg
+logError : ResponseErr -> Effect msg
 logError =
-    Ports.logError << errToString
+    Effect.PortLogError << errToString
 
 
 type alias Response data =
     Result ResponseErr data
 
 
-logIfError : Response data -> Cmd msg
+logIfError : Response data -> Effect msg
 logIfError res =
     case res of
         Ok _ ->
-            Cmd.none
+            Effect.Noop
 
         Err err ->
             logError err

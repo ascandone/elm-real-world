@@ -39,7 +39,7 @@ expectIsoExcMaybe : (x -> y) -> (y -> Maybe x) -> x -> Expectation
 expectIsoExcMaybe f g x =
     case g (f x) of
         Nothing ->
-            Expect.fail ("Unexpected Nothing" ++ Debug.toString x)
+            Expect.fail "Unexpected Nothing"
 
         Just k ->
             Expect.equal k x

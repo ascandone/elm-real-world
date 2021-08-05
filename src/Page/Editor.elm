@@ -94,13 +94,13 @@ view { mUser } model =
     ( Just "New Post"
     , case ( mUser, model.article ) of
         ( Nothing, _ ) ->
-            Debug.todo "auth msg"
+            text "You must be logged in to access this page"
 
         ( Just _, Async.Pending ) ->
             text "Loading.."
 
         ( Just _, Async.GotErr _ ) ->
-            Debug.todo "handle err msg"
+            text "Error while loading article"
 
         ( Just user, Async.GotData article ) ->
             View.Editor.view

@@ -24,9 +24,18 @@ type ResponseErr
     | HttpError Http.Error
 
 
+
+-- TODO
+
+
+errToString : ResponseErr -> String
+errToString _ =
+    "TODO"
+
+
 logError : ResponseErr -> Cmd msg
-logError e =
-    Ports.logError (Debug.toString e)
+logError =
+    Ports.logError << errToString
 
 
 type alias Response data =

@@ -80,7 +80,7 @@ view { mUser } model =
     ( Just "New Post"
     , case mUser of
         Nothing ->
-            Debug.todo "auth msg"
+            text "You must be logged in to access this page"
 
         Just user ->
             View.Editor.view

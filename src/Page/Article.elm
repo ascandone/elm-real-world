@@ -165,7 +165,8 @@ update { key, mUser } slug msg model =
         GotFollowResponse res ->
             case ( model.asyncArticle, res ) of
                 ( _, Err _ ) ->
-                    Debug.todo "handle err"
+                    -- TODO handle err
+                    App.pure model
 
                 ( GotData article, Ok profile ) ->
                     App.pure { model | asyncArticle = Async.fromResponse <| Ok { article | author = profile } }

@@ -229,6 +229,9 @@ view { timeZone } model =
                             Pending ->
                                 [ text "Loading..." ]
 
+                            GotErr _ ->
+                                [ text "Error while loading profile..." ]
+
                             GotData collection ->
                                 List.append
                                     (collection.articles
@@ -244,9 +247,6 @@ view { timeZone } model =
                                         , onSelected = SelectedPagination
                                         }
                                     ]
-
-                            GotErr _ ->
-                                Debug.todo "handle err"
                         )
                 ]
             ]

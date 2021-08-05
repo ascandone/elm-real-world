@@ -124,11 +124,11 @@ view model =
         Pending ->
             text ""
 
+        GotErr _ ->
+            text "Error while loading settings"
+
         GotData settings ->
             viewUserSettings settings
-
-        GotErr _ ->
-            Debug.todo "handle err"
     )
 
 

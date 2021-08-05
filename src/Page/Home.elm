@@ -14,6 +14,7 @@ import Api.Tags
 import App
 import Browser.Navigation
 import Data.Article as Article exposing (Article)
+import Data.Async as Async exposing (Async(..))
 import Data.User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
@@ -34,8 +35,8 @@ type FeedType
 
 
 type alias Model =
-    { tags : Maybe (List String)
-    , articles : Maybe (Api.Response Article.Collection)
+    { tags : Async (List String)
+    , articles : Async Article.Collection
     , feedType : FeedType
     , pagination : Pagination
     }
@@ -58,10 +59,10 @@ initialPagination =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { tags = Nothing
+    ( { tags = Pending
       , feedType = GlobalFeed
       , pagination = initialPagination
-      , articles = Nothing
+      , articles = Pending
       }
     , Cmd.batch
         [ Api.Tags.get |> Api.send GotTags
@@ -114,27 +115,17 @@ update { key } msg model =
             App.pure model
 
         GotTags res ->
-            case res of
-                Ok tags ->
-                    App.pure { model | tags = Just tags }
-
-                Err e ->
-                    App.pure model
-                        |> App.withCmd (Api.logError e)
+            App.pure { model | tags = Async.fromResponse res }
+                |> App.withCmd (Api.logIfError res)
 
         GotArticles res ->
-            -- TODO handle err
-            let
-                ret =
-                    App.pure { model | articles = Just res }
-            in
-            case res of
-                Err e ->
-                    ret |> App.withCmd (Api.logError e)
-
-                _ ->
-                    ret
-                        |> App.withCmd (jumpToTop SetViewport)
+            App.pure { model | articles = Async.fromResponse res }
+                |> App.withCmd
+                    (Cmd.batch
+                        [ Api.logIfError res
+                        , jumpToTop SetViewport
+                        ]
+                    )
 
         SelectedFeed feed ->
             App.pure { model | feedType = feed, pagination = initialPagination }
@@ -159,10 +150,10 @@ update { key } msg model =
 
         ToggleFavoriteArticleResponse res ->
             case ( res, model.articles ) of
-                ( Ok newArticle, Just (Ok collection) ) ->
+                ( Ok newArticle, GotData collection ) ->
                     App.pure
                         { model
-                            | articles = Just (Ok (Article.replaceArticle newArticle collection))
+                            | articles = GotData (Article.replaceArticle newArticle collection)
                         }
 
                 -- TODO handle err
@@ -224,13 +215,13 @@ view { mUser, timeZone } model =
                     [ lazy2 viewFeedToggle mUser model.feedType
                     , div [] <|
                         case model.articles of
-                            Nothing ->
+                            Pending ->
                                 [ text "Loading.." ]
 
-                            Just (Err _) ->
+                            GotErr _ ->
                                 [ text "error." ]
 
-                            Just (Ok collection) ->
+                            GotData collection ->
                                 List.concat
                                     [ List.map
                                         (View.ArticlePreview.view
@@ -250,10 +241,13 @@ view { mUser, timeZone } model =
                     [ div [ class "sidebar" ]
                         [ p [] [ text "Popular Tags" ]
                         , case model.tags of
-                            Nothing ->
+                            Pending ->
                                 text "Loading tags"
 
-                            Just tags ->
+                            GotErr _ ->
+                                text "Error loading tags"
+
+                            GotData tags ->
                                 div [ class "tag-list" ]
                                     (tags |> List.map viewTagPill)
                         ]

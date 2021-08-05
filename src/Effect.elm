@@ -69,10 +69,10 @@ run key eff =
 
 
 map : (a -> b) -> Effect a -> Effect b
-map f effect =
+map mapper effect =
     case effect of
         Cmd cmd ->
-            Cmd (Cmd.map f cmd)
+            Cmd (Cmd.map mapper cmd)
 
         NavReplaceUrl s ->
             NavReplaceUrl s
@@ -83,8 +83,23 @@ map f effect =
                 , headers = args.headers
                 , url = args.url
                 , body = args.body
-                , onResult = args.onResult >> f
+                , onResult = args.onResult >> mapper
                 }
 
-        _ ->
-            Debug.todo "effect map"
+        NavPushUrl x ->
+            NavPushUrl x
+
+        NavLoad x ->
+            NavLoad x
+
+        PortLogError x ->
+            PortLogError x
+
+        PortSerializeUser x ->
+            PortSerializeUser x
+
+        Noop ->
+            Noop
+
+        BrowserSetViewport x y msg ->
+            BrowserSetViewport x y (mapper msg)

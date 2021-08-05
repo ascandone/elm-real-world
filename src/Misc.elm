@@ -1,12 +1,11 @@
 module Misc exposing (..)
 
-import Browser.Dom
+import Effect exposing (Effect)
 import Expect exposing (Expectation)
 import Fuzz
 import Json.Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode exposing (Value)
-import Task
 
 
 defaultImage : Maybe String -> String
@@ -19,10 +18,9 @@ optionalMaybe field decoder =
     optional field (Json.Decode.map Just decoder) Nothing
 
 
-jumpToTop : msg -> Cmd msg
-jumpToTop msg =
-    Browser.Dom.setViewport 0.0 0.0
-        |> Task.perform (\() -> msg)
+jumpToTop : msg -> Effect msg
+jumpToTop =
+    Effect.BrowserSetViewport 0.0 0.0
 
 
 encodeMaybe : (a -> Value) -> Maybe a -> Value

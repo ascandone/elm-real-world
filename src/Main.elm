@@ -1,10 +1,10 @@
 module Main exposing (..)
 
-import App
+import App exposing (App)
 import Browser
 import Browser.Dom exposing (Error(..))
-import Browser.Navigation as Nav
 import Data.User as User exposing (User)
+import Effect exposing (Effect)
 import Html exposing (Html)
 import Json.Decode exposing (decodeString)
 import Json.Encode as Enc
@@ -18,7 +18,6 @@ import Page.NotFound
 import Page.Profile
 import Page.Register
 import Page.Settings
-import Ports
 import Route as Route exposing (Route(..))
 import Task
 import Time
@@ -28,8 +27,7 @@ import View.Nav
 
 
 type alias Model =
-    { key : Nav.Key
-    , page : Page
+    { page : Page
     , mUser : Maybe User
     , timeZone : Maybe Time.Zone
     }
@@ -40,16 +38,15 @@ type alias Flags =
     }
 
 
-init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init flags url key =
-    { key = key
-    , page = Page.NotFound
+init : Flags -> Url.Url -> ( Model, List (Effect Msg) )
+init flags url =
+    { page = Page.NotFound
     , mUser =
         flags.user |> Maybe.andThen (decodeString User.decoder >> Result.toMaybe)
     , timeZone = Nothing
     }
         |> update (UrlChanged url)
-        |> App.batchWith (Task.perform GotTimeZone Time.here)
+        |> App.batchWith (Effect.Cmd <| Task.perform GotTimeZone Time.here)
 
 
 type Msg
@@ -66,7 +63,7 @@ type Msg
     | EditorMsg String Page.Editor.Msg
 
 
-onUrlChanged : Maybe Route -> Model -> ( Model, Cmd Msg )
+onUrlChanged : Maybe Route -> Model -> ( Model, List (Effect Msg) )
 onUrlChanged mRoute model =
     let
         handleInit_ =
@@ -74,7 +71,7 @@ onUrlChanged mRoute model =
     in
     case mRoute of
         Nothing ->
-            handleInit_ (\() -> Page.NotFound) never ( (), Cmd.none )
+            handleInit_ (\() -> Page.NotFound) never ( (), [] )
 
         Just Route.Home ->
             handleInit_ Page.Home HomeMsg Page.Home.init
@@ -101,7 +98,7 @@ onUrlChanged mRoute model =
             handleInit_ Page.Settings SettingsMsg (Page.Settings.init model)
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, List (Effect Msg) )
 update msg model =
     let
         handleUpdate_ =
@@ -110,21 +107,23 @@ update msg model =
     case ( model.page, msg ) of
         ( _, GotTimeZone timeZone ) ->
             ( { model | timeZone = Just timeZone }
-            , Cmd.none
+            , []
             )
 
         ( _, UrlRequested urlRequest ) ->
             case urlRequest of
                 Browser.Internal url ->
-                    case url.fragment of
+                    ( model
+                    , case url.fragment of
                         Nothing ->
-                            ( model, Cmd.none )
+                            []
 
                         Just _ ->
-                            ( model, Nav.pushUrl model.key (Url.toString url) )
+                            [ Effect.NavPushUrl (Url.toString url) ]
+                    )
 
                 Browser.External href ->
-                    ( model, Nav.load href )
+                    ( model, [ Effect.NavLoad href ] )
 
         ( _, UrlChanged url ) ->
             onUrlChanged (Route.parse url) model
@@ -133,7 +132,7 @@ update msg model =
             handleUpdate_
                 Page.Home
                 HomeMsg
-                (Page.Home.update model subMsg subModel)
+                (Page.Home.update subMsg subModel)
                 never
 
         ( Page.Login subModel, LoginMsg subMsg ) ->
@@ -142,10 +141,9 @@ update msg model =
                 (Page.Login.update subMsg subModel)
                 (\(Page.Login.LoggedIn user) ->
                     ( { model | mUser = Just user }
-                    , Cmd.batch
-                        [ Ports.serializeUser <| Enc.encode 2 (User.encode user)
-                        , Nav.pushUrl model.key (Route.toHref Route.Home)
-                        ]
+                    , [ Effect.PortSerializeUser <| Enc.encode 2 (User.encode user)
+                      , Effect.NavPushUrl (Route.toHref Route.Home)
+                      ]
                     )
                 )
 
@@ -155,16 +153,15 @@ update msg model =
                 (Page.Register.update subMsg subModel)
                 (\(Page.Register.Registered user) ->
                     ( { model | mUser = Just user }
-                    , Cmd.batch
-                        [ Ports.serializeUser <| Enc.encode 2 (User.encode user)
-                        , Nav.pushUrl model.key (Route.toHref Route.Home)
-                        ]
+                    , [ Effect.PortSerializeUser <| Enc.encode 2 (User.encode user)
+                      , Effect.NavPushUrl <| Route.toHref Route.Home
+                      ]
                     )
                 )
 
         ( Page.Article slug subModel, ArticleMsg msgSlug subMsg ) ->
             if slug /= msgSlug then
-                ( model, Cmd.none )
+                ( model, [] )
 
             else
                 handleUpdate_ (Page.Article slug)
@@ -174,7 +171,7 @@ update msg model =
 
         ( Page.Profile username subModel, ProfileMsg msgUsername subMsg ) ->
             if username /= msgUsername then
-                ( model, Cmd.none )
+                ( model, [] )
 
             else
                 handleUpdate_ (Page.Profile username)
@@ -191,21 +188,21 @@ update msg model =
         ( Page.NewPost subModel, NewPostMsg subMsg ) ->
             handleUpdate_ Page.NewPost
                 NewPostMsg
-                (Page.NewPost.update model subMsg subModel)
+                (Page.NewPost.update subMsg subModel)
                 never
 
         ( Page.Editor slug subModel, EditorMsg slug1 subMsg ) ->
             if slug /= slug1 then
-                ( model, Cmd.none )
+                ( model, [] )
 
             else
                 handleUpdate_ (Page.Editor slug)
                     (EditorMsg slug)
-                    (Page.Editor.update model slug subMsg subModel)
+                    (Page.Editor.update slug subMsg subModel)
                     never
 
         _ ->
-            ( model, Cmd.none )
+            ( model, [] )
 
 
 subscriptions : Model -> Sub Msg
@@ -273,47 +270,45 @@ view model =
     }
 
 
-main : Program Flags Model Msg
+main : Program Flags (App Model) Msg
 main =
-    Browser.application
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        , onUrlRequest = UrlRequested
-        , onUrlChange = UrlChanged
-        }
+    Browser.application <|
+        App.getApplication
+            { init = init
+            , view = view
+            , update = update
+            , subscriptions = subscriptions
+            , onUrlRequest = UrlRequested
+            , onUrlChange = UrlChanged
+            }
 
 
-handleInit : Model -> (subModel -> Page) -> (msg -> Msg) -> ( subModel, Cmd msg ) -> ( Model, Cmd Msg )
-handleInit model constr toMsg ( subModel, cmd ) =
+handleInit : Model -> (subModel -> Page) -> (msg -> Msg) -> ( subModel, List (Effect msg) ) -> ( Model, List (Effect Msg) )
+handleInit model constr toMsg ( subModel, effs ) =
     ( { model | page = constr subModel }
-    , Cmd.map toMsg cmd
+    , List.map (Effect.map toMsg) effs
     )
 
 
 handleUpdate :
     Model
     -> (subModel -> Page)
-    -> (msg -> Msg)
-    -> ( subModel, Cmd msg, Maybe evt )
-    -> (evt -> ( Model, Cmd Msg ))
-    -> ( Model, Cmd Msg )
-handleUpdate model constr toMsg ( subModel, cmd, mEvt ) handleEvent =
+    -> (subMsg -> Msg)
+    -> ( subModel, List (Effect subMsg), Maybe evt )
+    -> (evt -> ( Model, List (Effect Msg) ))
+    -> ( Model, List (Effect Msg) )
+handleUpdate model constr toMsg ( subModel, effs, mEvt ) handleEvent =
     case mEvt of
         Nothing ->
             ( { model | page = constr subModel }
-            , Cmd.map toMsg cmd
+            , List.map (Effect.map toMsg) effs
             )
 
         Just evt ->
             let
-                ( newModel, cmd1 ) =
+                ( newModel, effs1 ) =
                     handleEvent evt
             in
             ( { newModel | page = constr subModel }
-            , Cmd.batch
-                [ Cmd.map toMsg cmd
-                , cmd1
-                ]
+            , List.map (Effect.map toMsg) effs ++ effs1
             )

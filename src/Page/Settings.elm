@@ -12,6 +12,7 @@ import App
 import Browser.Navigation
 import Data.Async exposing (Async(..))
 import Data.User exposing (User)
+import Effect exposing (Effect)
 import Html exposing (..)
 import Html.Attributes as A exposing (class, value)
 import Html.Events exposing (onInput, onSubmit)
@@ -49,8 +50,8 @@ type Msg
     | GotSubmitResponse (Api.Response User)
 
 
-init : { r | mUser : Maybe User, key : Browser.Navigation.Key } -> ( Model, Cmd Msg )
-init { mUser, key } =
+init : { r | mUser : Maybe User } -> ( Model, Effect Msg )
+init { mUser } =
     ( { asyncUserSettings = Pending
       }
     , case mUser of
@@ -58,7 +59,7 @@ init { mUser, key } =
             Api.User.get user |> Api.send GotUserResponse
 
         Nothing ->
-            Browser.Navigation.replaceUrl key (Route.toHref Route.Login)
+            Effect.NavReplaceUrl (Route.toHref Route.Login)
     )
 
 
@@ -79,7 +80,7 @@ update :
     }
     -> Msg
     -> Model
-    -> ( Model, Cmd Msg, Maybe Never )
+    -> ( Model, List (Effect Msg), Maybe Never )
 update { mUser, key } msg model =
     case msg of
         GotUserResponse res ->
@@ -90,18 +91,17 @@ update { mUser, key } msg model =
                             |> Result.map getSettings
                             |> Data.Async.fromResponse
                 }
-                |> App.withCmd (Api.logIfError res)
+                |> App.withEff (Api.logIfError res)
 
         SubmitSettings settings ->
             case mUser of
                 Just user ->
                     App.pure model
-                        |> App.withCmd (Api.User.put user (getPutBody settings) |> Api.send GotSubmitResponse)
+                        |> App.withEff (Api.User.put user (getPutBody settings) |> Api.send GotSubmitResponse)
 
                 Nothing ->
                     App.pure model
-                        |> App.withCmd
-                            (Browser.Navigation.replaceUrl key (Route.toHref Route.Login))
+                        |> App.withEff (Effect.NavReplaceUrl (Route.toHref Route.Login))
 
         InputForm settings ->
             App.pure { model | asyncUserSettings = GotData settings }
@@ -114,7 +114,7 @@ update { mUser, key } msg model =
                             |> Result.map getSettings
                             |> Data.Async.fromResponse
                 }
-                |> App.withCmd (Api.logIfError res)
+                |> App.withEff (Api.logIfError res)
 
 
 view : Model -> ( Maybe String, Html Msg )

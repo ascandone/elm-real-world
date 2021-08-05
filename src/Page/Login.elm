@@ -11,6 +11,7 @@ import Api
 import Api.Users.Login
 import App
 import Data.User exposing (User)
+import Effect exposing (Effect)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events as E
@@ -33,12 +34,12 @@ type alias Model =
     }
 
 
-init : ( Model, Cmd Msg )
+init : ( Model, List (Effect Msg) )
 init =
     ( { form = Form "" ""
       , error = Nothing
       }
-    , Cmd.none
+    , []
     )
 
 
@@ -57,7 +58,7 @@ validateForm _ =
     True
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, Maybe Event )
+update : Msg -> Model -> ( Model, List (Effect Msg), Maybe Event )
 update msg model =
     case msg of
         OnInput form ->
@@ -66,7 +67,7 @@ update msg model =
         Submit ->
             if validateForm model.form then
                 App.pure model
-                    |> App.withCmd (Api.Users.Login.post model.form |> Api.send GotUser)
+                    |> App.withEff (Api.Users.Login.post model.form |> Api.send GotUser)
 
             else
                 App.pure model

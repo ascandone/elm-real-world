@@ -14,12 +14,12 @@ import Api.Articles.Slug_.Comments
 import Api.Articles.Slug_.Favorite
 import Api.Profiles.Username_.Follow
 import App
-import Browser.Navigation
 import Data.Article exposing (Article)
 import Data.Async as Async exposing (Async(..))
 import Data.Comment exposing (Comment)
 import Data.Profile exposing (Profile)
 import Data.User exposing (User)
+import Effect exposing (Effect)
 import Html exposing (..)
 import Html.Attributes as A exposing (class, href)
 import Html.Events exposing (onClick, onInput)
@@ -58,40 +58,36 @@ type Msg
     | GotDeleteArticleResponse (Api.Response ())
 
 
-init : String -> ( Model, Cmd Msg )
+init : String -> ( Model, List (Effect Msg) )
 init slug =
     ( { asyncArticle = Pending
       , asyncComments = Pending
       , comment = ""
       }
-    , Cmd.batch
-        [ Api.Articles.Slug_.get slug |> Api.send GotArticle
-        , Api.Articles.Slug_.Comments.get slug |> Api.send GotComments
-        ]
+    , [ Api.Articles.Slug_.get slug |> Api.send GotArticle
+      , Api.Articles.Slug_.Comments.get slug |> Api.send GotComments
+      ]
     )
 
 
 update :
-    { r
-        | key : Browser.Navigation.Key
-        , mUser : Maybe User
-    }
+    { r | mUser : Maybe User }
     -> String
     -> Msg
     -> Model
-    -> ( Model, Cmd Msg, Maybe Event )
-update { key, mUser } slug msg model =
+    -> ( Model, List (Effect Msg), Maybe Event )
+update { mUser } slug msg model =
     case msg of
         GotComments res ->
             App.pure { model | asyncComments = Async.fromResponse res }
-                |> App.withCmd (Api.logIfError res)
+                |> App.withEff (Api.logIfError res)
 
         InputComment str ->
             App.pure { model | comment = str }
 
         SubmitComment user ->
             App.pure model
-                |> App.withCmd
+                |> App.withEff
                     (Api.Articles.Slug_.Comments.post user { body = model.comment } slug
                         |> Api.send GotCommentResponse
                     )
@@ -126,14 +122,14 @@ update { key, mUser } slug msg model =
                                 Api.Profiles.Username_.Follow.post
                     in
                     App.pure model
-                        |> App.withCmd
+                        |> App.withEff
                             (action user article.author.username
                                 |> Api.send GotFollowResponse
                             )
 
                 ( _, Nothing ) ->
                     App.pure model
-                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Login))
+                        |> App.withEff (Effect.NavPushUrl (Route.toHref Route.Login))
 
                 _ ->
                     App.pure model
@@ -150,14 +146,14 @@ update { key, mUser } slug msg model =
                                 Api.Articles.Slug_.Favorite.post
                     in
                     App.pure model
-                        |> App.withCmd
+                        |> App.withEff
                             (action user article.slug
                                 |> Api.send GotFavoriteResponse
                             )
 
                 ( _, Nothing ) ->
                     App.pure model
-                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Login))
+                        |> App.withEff (Effect.NavPushUrl <| Route.toHref Route.Login)
 
                 _ ->
                     App.pure model
@@ -187,7 +183,7 @@ update { key, mUser } slug msg model =
 
         DeletedComment user id ->
             App.pure model
-                |> App.withCmd
+                |> App.withEff
                     (Api.Articles.Slug_.Comments.delete user slug id
                         |> Api.send (GotDeleteCommentResponse id)
                     )
@@ -203,14 +199,14 @@ update { key, mUser } slug msg model =
 
                 ( Err err, _ ) ->
                     App.pure model
-                        |> App.withCmd (Api.logError err)
+                        |> App.withEff (Api.logError err)
 
                 _ ->
                     App.pure model
 
         ClickedDeleteArticle article user ->
             App.pure model
-                |> App.withCmd
+                |> App.withEff
                     (Api.Articles.Slug_.delete user article.slug
                         |> Api.send GotDeleteArticleResponse
                     )
@@ -219,11 +215,11 @@ update { key, mUser } slug msg model =
             case res of
                 Ok () ->
                     App.pure model
-                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Home))
+                        |> App.withEff (Effect.NavPushUrl (Route.toHref Route.Home))
 
                 Err err ->
                     App.pure model
-                        |> App.withCmd (Api.logError err)
+                        |> App.withEff (Api.logError err)
 
 
 viewCardCommentForm :

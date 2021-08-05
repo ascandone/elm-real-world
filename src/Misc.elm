@@ -3,7 +3,6 @@ module Misc exposing (..)
 import Browser.Dom
 import Expect exposing (Expectation)
 import Fuzz
-import Http exposing (Expect)
 import Json.Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode exposing (Value)

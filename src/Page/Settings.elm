@@ -49,16 +49,17 @@ type Msg
     | GotSubmitResponse (Api.Response User)
 
 
-init : { r | mUser : Maybe User } -> ( Model, Effect Msg )
+init : { r | mUser : Maybe User } -> ( Model, List (Effect Msg) )
 init { mUser } =
     ( { asyncUserSettings = Pending
       }
-    , case mUser of
-        Just user ->
-            Api.User.get user |> Api.send GotUserResponse
+    , [ case mUser of
+            Just user ->
+                Api.User.get user |> Api.send GotUserResponse
 
-        Nothing ->
-            Effect.NavReplaceUrl (Route.toHref Route.Login)
+            Nothing ->
+                Effect.NavReplaceUrl (Route.toHref Route.Login)
+      ]
     )
 
 

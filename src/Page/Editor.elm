@@ -9,10 +9,10 @@ module Page.Editor exposing
 import Api
 import Api.Articles.Slug_
 import App
-import Browser.Navigation
 import Data.Article exposing (Article)
 import Data.Async as Async exposing (Async(..))
 import Data.User exposing (User)
+import Effect exposing (Effect)
 import Html exposing (..)
 import Route
 import View.Editor exposing (ArticleForm)
@@ -30,11 +30,12 @@ type Msg
     | SubmitResponse (Api.Response Article)
 
 
-init : String -> ( Model, Cmd Msg )
+init : String -> ( Model, List (Effect Msg) )
 init slug =
     ( { article = Async.Pending
       }
-    , Api.Articles.Slug_.get slug |> Api.send GotArticleResponse
+    , [ Api.Articles.Slug_.get slug |> Api.send GotArticleResponse
+      ]
     )
 
 
@@ -47,8 +48,8 @@ articleToForm article =
     }
 
 
-update : { r | key : Browser.Navigation.Key } -> String -> Msg -> Model -> ( Model, Cmd Msg, Maybe Never )
-update { key } slug msg model =
+update : String -> Msg -> Model -> ( Model, List (Effect Msg), Maybe Never )
+update slug msg model =
     case msg of
         InputForm article ->
             App.pure { model | article = Async.GotData article }
@@ -72,13 +73,13 @@ update { key } slug msg model =
                     }
             in
             App.pure model
-                |> App.withCmd (Api.Articles.Slug_.put user slug putBody |> Api.send SubmitResponse)
+                |> App.withEff (Api.Articles.Slug_.put user slug putBody |> Api.send SubmitResponse)
 
         SubmitResponse res ->
             case res of
                 Err err ->
                     App.pure model
-                        |> App.withCmd (Api.logError err)
+                        |> App.withEff (Api.logError err)
 
                 Ok article ->
                     let
@@ -86,7 +87,7 @@ update { key } slug msg model =
                             Route.toHref (Route.Article article.slug)
                     in
                     App.pure model
-                        |> App.withCmd (Browser.Navigation.pushUrl key url)
+                        |> App.withEff (Effect.NavPushUrl url)
 
 
 view : { r | mUser : Maybe User } -> Model -> ( Maybe String, Html Msg )

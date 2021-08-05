@@ -136,7 +136,8 @@ update msg model =
                 never
 
         ( Page.Login subModel, LoginMsg subMsg ) ->
-            handleUpdate_ Page.Login
+            handleUpdate_
+                Page.Login
                 LoginMsg
                 (Page.Login.update subMsg subModel)
                 (\(Page.Login.LoggedIn user) ->
@@ -148,7 +149,8 @@ update msg model =
                 )
 
         ( Page.Register subModel, RegisterMsg subMsg ) ->
-            handleUpdate_ Page.Register
+            handleUpdate_
+                Page.Register
                 RegisterMsg
                 (Page.Register.update subMsg subModel)
                 (\(Page.Register.Registered user) ->
@@ -164,7 +166,8 @@ update msg model =
                 ( model, [] )
 
             else
-                handleUpdate_ (Page.Article slug)
+                handleUpdate_
+                    (Page.Article slug)
                     (ArticleMsg slug)
                     (Page.Article.update model slug subMsg subModel)
                     never
@@ -174,19 +177,22 @@ update msg model =
                 ( model, [] )
 
             else
-                handleUpdate_ (Page.Profile username)
+                handleUpdate_
+                    (Page.Profile username)
                     (ProfileMsg username)
                     (Page.Profile.update model { username = username } subMsg subModel)
                     never
 
         ( Page.Settings subModel, SettingsMsg subMsg ) ->
-            handleUpdate_ Page.Settings
+            handleUpdate_
+                Page.Settings
                 SettingsMsg
                 (Page.Settings.update model subMsg subModel)
                 never
 
         ( Page.NewPost subModel, NewPostMsg subMsg ) ->
-            handleUpdate_ Page.NewPost
+            handleUpdate_
+                Page.NewPost
                 NewPostMsg
                 (Page.NewPost.update subMsg subModel)
                 never
@@ -196,7 +202,8 @@ update msg model =
                 ( model, [] )
 
             else
-                handleUpdate_ (Page.Editor slug)
+                handleUpdate_
+                    (Page.Editor slug)
                     (EditorMsg slug)
                     (Page.Editor.update slug subMsg subModel)
                     never

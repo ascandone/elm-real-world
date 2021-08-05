@@ -13,7 +13,6 @@ import Api.Articles.Slug_.Favorite
 import Api.Profiles.Username_
 import Api.Profiles.Username_.Follow
 import App
-import Browser.Navigation
 import Data.Article as Article exposing (Article, Collection)
 import Data.Async as Async exposing (Async(..))
 import Data.Profile exposing (Profile)
@@ -101,15 +100,12 @@ type Msg
 
 
 update :
-    { r
-        | mUser : Maybe User
-        , key : Browser.Navigation.Key
-    }
+    { r | mUser : Maybe User }
     -> { username : String }
     -> Msg
     -> Model
     -> ( Model, List (Effect Msg), Maybe Event )
-update { mUser, key } { username } msg model =
+update { mUser } { username } msg model =
     case msg of
         SetViewport ->
             App.pure model

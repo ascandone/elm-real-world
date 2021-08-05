@@ -9,7 +9,6 @@ module Page.Settings exposing
 import Api
 import Api.User
 import App
-import Browser.Navigation
 import Data.Async exposing (Async(..))
 import Data.User exposing (User)
 import Effect exposing (Effect)
@@ -74,14 +73,11 @@ getSettings user =
 
 
 update :
-    { r
-        | mUser : Maybe User
-        , key : Browser.Navigation.Key
-    }
+    { r | mUser : Maybe User }
     -> Msg
     -> Model
     -> ( Model, List (Effect Msg), Maybe Never )
-update { mUser, key } msg model =
+update { mUser } msg model =
     case msg of
         GotUserResponse res ->
             App.pure

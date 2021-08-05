@@ -70,22 +70,13 @@ responseDecoder decoder =
         ]
 
 
-handleResponse : Decoder data -> Result Http.Error String -> Response data
+handleResponse : Decoder data -> Result Http.Error String -> Result ResponseErr data
 handleResponse decoder res =
-    case res of
-        Err err ->
-            Err (HttpError err)
-
-        Ok str ->
-            case Dec.decodeString (responseDecoder decoder) str of
-                Err decErr ->
-                    Err (DecodingError decErr)
-
-                Ok (Err apiErr) ->
-                    Err (ApiError_ apiErr)
-
-                Ok (Ok data) ->
-                    Ok data
+    res
+        |> Result.mapError HttpError
+        |> Result.map (Dec.decodeString (responseDecoder decoder))
+        |> Result.andThen (Result.mapError DecodingError)
+        |> Result.andThen (Result.mapError ApiError_)
 
 
 send : (Response data -> msg) -> Request data -> Effect msg

@@ -107,6 +107,12 @@ fetchArticles model =
                     ]
 
 
+withFetchArticles : ( Model, List (Effect Msg), Maybe Never ) -> ( Model, List (Effect Msg), Maybe Never )
+withFetchArticles (( model, _, _ ) as app) =
+    app
+        |> App.withEff (fetchArticles model)
+
+
 update : Msg -> Model -> ( Model, List (Effect Msg), Maybe Never )
 update msg model =
     case msg of
@@ -124,11 +130,11 @@ update msg model =
 
         SelectedFeed feed ->
             App.pure { model | feedType = feed, pagination = initialPagination }
-                |> App.withEff (fetchArticles model)
+                |> withFetchArticles
 
         SelectedPagination pagination ->
             App.pure { model | pagination = pagination }
-                |> App.withEff (fetchArticles model)
+                |> withFetchArticles
 
         ToggleFavoriteArticle mUser article ->
             case mUser of
@@ -253,19 +259,40 @@ view { mUser, timeZone } model =
     )
 
 
-matchArticles : { offset : Int, limit : Int } -> UP.Parser (Bool -> a) a
+
+-- ###  TEST
+
+
+getEffs : ( a, b, c ) -> b
+getEffs ( _, effs, _ ) =
+    effs
+
+
+matchArticles :
+    { offset : Int
+    , limit : Int
+    , tag : Maybe String
+    }
+    -> UP.Parser (Bool -> a) a
 matchArticles args =
-    UP.map (\offset limit -> offset == Just args.offset && limit == Just args.limit) <|
+    UP.map
+        (\offset limit tag ->
+            (offset == Just args.offset)
+                && (limit == Just args.limit)
+                && (tag == args.tag)
+        )
+    <|
         UP.s "api"
             </> UP.s "articles"
             <?> UPQ.int "offset"
             <?> UPQ.int "limit"
+            <?> UPQ.string "tag"
 
 
 specs : Test
 specs =
     Test.concat
-        [ Test.test "Fetch article on init" <|
+        [ Test.test "Fetch tags on init" <|
             \() ->
                 init
                     |> Tuple.second
@@ -274,10 +301,61 @@ specs =
                             case eff of
                                 Effect.HttpRequest req ->
                                     (req.method == "GET")
-                                        && checkUrl req.url (matchArticles { offset = 0, limit = 0 })
+                                        && (req.url == Api.apiBase ++ "/api/tags")
 
                                 _ ->
                                     False
                         )
                     |> Expect.true "cannot find Http request"
+        , Test.test "Fetch article on init" <|
+            \() ->
+                init
+                    |> Tuple.second
+                    |> List.any
+                        (\eff ->
+                            case eff of
+                                Effect.HttpRequest req ->
+                                    (req.method == "GET")
+                                        && checkUrl req.url
+                                            (matchArticles
+                                                { offset = 0
+                                                , limit = 10
+                                                , tag = Nothing
+                                                }
+                                            )
+
+                                _ ->
+                                    False
+                        )
+                    |> Expect.true "cannot find Http request"
+        , Test.describe "Fetch right feed when change tab"
+            [ Test.test "Tag feed" <|
+                \() ->
+                    init
+                        |> Tuple.first
+                        |> update (SelectedFeed (TagFeed "some-tag"))
+                        |> getEffs
+                        |> List.any
+                            (\eff ->
+                                case eff of
+                                    Effect.HttpRequest req ->
+                                        (req.method == "GET")
+                                            && checkUrl req.url
+                                                (matchArticles
+                                                    { offset = 0
+                                                    , limit = 10
+                                                    , tag = Just "some-tag"
+                                                    }
+                                                )
+
+                                    _ ->
+                                        False
+                            )
+                        |> Expect.true "cannot find Http request"
+            , Test.todo "Global feed"
+            , Test.todo "Personal feed"
+            ]
+        , Test.describe "Fetch right feed when change pagination"
+            [ Test.todo "t1"
+            ]
         ]

@@ -1,7 +1,9 @@
 module Effect exposing (Effect(..), HttpRequest_, map, run)
 
+import Browser.Dom
 import Browser.Navigation
 import Http exposing (Body, Header)
+import Task
 
 
 type alias HttpRequest_ msg =
@@ -19,6 +21,10 @@ type Effect msg
     | NavPushUrl String
     | NavLoad String
     | HttpRequest (HttpRequest_ msg)
+    | PortLogError String
+    | PortSerializeUser String
+    | Noop
+    | BrowserSetViewport Float Float msg
 
 
 run : Browser.Navigation.Key -> Effect msg -> Cmd msg
@@ -26,6 +32,10 @@ run key eff =
     case eff of
         Cmd cmd ->
             cmd
+
+        BrowserSetViewport x y msg ->
+            Browser.Dom.setViewport x y
+                |> Task.perform (\() -> msg)
 
         NavReplaceUrl s ->
             Browser.Navigation.replaceUrl key s

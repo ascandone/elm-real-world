@@ -63,7 +63,7 @@ type Msg
     | ProfileMsg String Page.Profile.Msg
     | SettingsMsg Page.Settings.Msg
     | NewPostMsg Page.NewPost.Msg
-    | EditorMsg Page.Editor.Msg
+    | EditorMsg String Page.Editor.Msg
 
 
 onUrlChanged : Maybe Route -> Model -> ( Model, Cmd Msg )
@@ -95,7 +95,7 @@ onUrlChanged mRoute model =
             handleInit_ Page.NewPost NewPostMsg Page.NewPost.init
 
         Just (Route.Editor slug) ->
-            handleInit_ (Page.Editor slug) EditorMsg (Page.Editor.init slug)
+            handleInit_ (Page.Editor slug) (EditorMsg slug) (Page.Editor.init slug)
 
         Just Route.Settings ->
             handleInit_ Page.Settings SettingsMsg (Page.Settings.init model)
@@ -194,11 +194,15 @@ update msg model =
                 (Page.NewPost.update model subMsg subModel)
                 never
 
-        ( Page.Editor slug subModel, EditorMsg subMsg ) ->
-            handleUpdate_ (Page.Editor slug)
-                EditorMsg
-                (Page.Editor.update model slug subMsg subModel)
-                never
+        ( Page.Editor slug subModel, EditorMsg slug1 subMsg ) ->
+            if slug /= slug1 then
+                ( model, Cmd.none )
+
+            else
+                handleUpdate_ (Page.Editor slug)
+                    (EditorMsg slug)
+                    (Page.Editor.update model slug subMsg subModel)
+                    never
 
         _ ->
             ( model, Cmd.none )
@@ -231,8 +235,8 @@ viewMain model =
         Page.NewPost subModel ->
             mapMsg NewPostMsg (Page.NewPost.view model subModel)
 
-        Page.Editor _ subModel ->
-            mapMsg EditorMsg (Page.Editor.view model subModel)
+        Page.Editor slug subModel ->
+            mapMsg (EditorMsg slug) (Page.Editor.view model subModel)
 
         Page.Article slug subModel ->
             mapMsg (ArticleMsg slug) (Page.Article.view model subModel)

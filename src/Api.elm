@@ -2,6 +2,7 @@ module Api exposing
     ( ApiError
     , Response
     , ResponseErr(..)
+    , apiBase
     , logError
     , logIfError
     , send
@@ -12,6 +13,11 @@ import Effect exposing (Effect)
 import Http
 import Json.Decode as Dec exposing (Decoder)
 import Url.Builder
+
+
+apiBase : String
+apiBase =
+    "https://conduit.productionready.io"
 
 
 type alias ApiError =
@@ -91,7 +97,7 @@ send onResponse (Request config) =
                     [ Http.header "Authorization" ("Token " ++ user.token) ]
         , url =
             Url.Builder.crossOrigin
-                "https://conduit.productionready.io"
+                apiBase
                 ("api" :: config.path)
                 config.queryParameters
         , body =

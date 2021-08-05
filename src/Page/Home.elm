@@ -2,6 +2,7 @@ module Page.Home exposing
     ( Model
     , Msg
     , init
+    , specs
     , update
     , view
     )
@@ -16,13 +17,17 @@ import Data.Article as Article exposing (Article)
 import Data.Async as Async exposing (Async(..))
 import Data.User exposing (User)
 import Effect exposing (Effect)
+import Expect
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events as E
 import Html.Lazy exposing (lazy2)
-import Misc exposing (jumpToTop)
+import Misc exposing (checkUrl, jumpToTop)
 import Route
+import Test exposing (Test)
 import Time
+import Url.Parser as UP exposing ((</>), (<?>))
+import Url.Parser.Query as UPQ
 import View.ArticlePreview
 import View.NavPills
 import View.Pagination exposing (Pagination)
@@ -246,3 +251,33 @@ view { mUser, timeZone } model =
             ]
         ]
     )
+
+
+matchArticles : { offset : Int, limit : Int } -> UP.Parser (Bool -> a) a
+matchArticles args =
+    UP.map (\offset limit -> offset == Just args.offset && limit == Just args.limit) <|
+        UP.s "api"
+            </> UP.s "articles"
+            <?> UPQ.int "offset"
+            <?> UPQ.int "limit"
+
+
+specs : Test
+specs =
+    Test.concat
+        [ Test.test "Fetch article on init" <|
+            \() ->
+                init
+                    |> Tuple.second
+                    |> List.any
+                        (\eff ->
+                            case eff of
+                                Effect.HttpRequest req ->
+                                    (req.method == "GET")
+                                        && checkUrl req.url (matchArticles { offset = 0, limit = 0 })
+
+                                _ ->
+                                    False
+                        )
+                    |> Expect.true "cannot find Http request"
+        ]

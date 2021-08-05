@@ -6,6 +6,8 @@ import Fuzz
 import Json.Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode exposing (Value)
+import Url
+import Url.Parser
 
 
 defaultImage : Maybe String -> String
@@ -52,3 +54,10 @@ expectIsoEnc decoder encode x =
 fuzzNonEmptyStr : Fuzz.Fuzzer String
 fuzzNonEmptyStr =
     Fuzz.map2 String.cons Fuzz.char Fuzz.string
+
+
+checkUrl : String -> Url.Parser.Parser (Bool -> Bool) Bool -> Bool
+checkUrl str parser =
+    Url.fromString str
+        |> Maybe.andThen (Url.Parser.parse parser)
+        |> Maybe.withDefault False

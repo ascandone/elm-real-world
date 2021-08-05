@@ -8,6 +8,7 @@ module Api exposing
     )
 
 import Api.Internal exposing (Request(..))
+import Effect exposing (Effect)
 import Http
 import Json.Decode as Dec exposing (Decoder)
 import Ports
@@ -22,6 +23,7 @@ type alias ApiError =
 type ResponseErr
     = ApiError_ ApiError
     | HttpError Http.Error
+    | DecodingError Dec.Error
 
 
 
@@ -68,9 +70,27 @@ responseDecoder decoder =
         ]
 
 
-send : (Response data -> msg) -> Request data -> Cmd msg
+handleResponse : Decoder data -> Result Http.Error String -> Response data
+handleResponse decoder res =
+    case res of
+        Err err ->
+            Err (HttpError err)
+
+        Ok str ->
+            case Dec.decodeString (responseDecoder decoder) str of
+                Err decErr ->
+                    Err (DecodingError decErr)
+
+                Ok (Err apiErr) ->
+                    Err (ApiError_ apiErr)
+
+                Ok (Ok data) ->
+                    Ok data
+
+
+send : (Response data -> msg) -> Request data -> Effect msg
 send onResponse (Request config) =
-    Http.request
+    Effect.HttpRequest
         { method = config.method
         , headers =
             case config.auth of
@@ -91,21 +111,5 @@ send onResponse (Request config) =
 
                 Just body ->
                     Http.jsonBody body
-        , expect =
-            Http.expectJson
-                (\result ->
-                    onResponse <|
-                        case result of
-                            Ok (Ok data) ->
-                                Ok data
-
-                            Ok (Err apiErr) ->
-                                Err <| ApiError_ apiErr
-
-                            Err httpErr ->
-                                Err <| HttpError httpErr
-                )
-                (responseDecoder config.decoder)
-        , timeout = Nothing
-        , tracker = Nothing
+        , onResult = onResponse << handleResponse config.decoder
         }

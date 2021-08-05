@@ -24,8 +24,8 @@ withEff eff ( model, effs, evt ) =
 
 
 withEvt : evt -> ( model, List (Effect msg), Maybe evt ) -> ( model, List (Effect msg), Maybe evt )
-withEvt evt ( model, cmd, _ ) =
-    ( model, cmd, Just evt )
+withEvt evt ( model, effs, _ ) =
+    ( model, effs, Just evt )
 
 
 batchWith : Effect msg -> ( model, List (Effect msg) ) -> ( model, List (Effect msg) )

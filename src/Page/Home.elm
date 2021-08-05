@@ -12,10 +12,10 @@ import Api.Articles.Feed
 import Api.Articles.Slug_.Favorite
 import Api.Tags
 import App
-import Browser.Navigation
 import Data.Article as Article exposing (Article)
 import Data.Async as Async exposing (Async(..))
 import Data.User exposing (User)
+import Effect exposing (Effect)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events as E
@@ -57,27 +57,26 @@ initialPagination =
     View.Pagination.init { pageSize = 10 }
 
 
-init : ( Model, Cmd Msg )
+init : ( Model, List (Effect Msg) )
 init =
     ( { tags = Pending
       , feedType = GlobalFeed
       , pagination = initialPagination
       , articles = Pending
       }
-    , Cmd.batch
-        [ Api.Tags.get |> Api.send GotTags
-        , Api.Articles.get [] |> Api.send GotArticles
-        ]
+    , [ Api.Tags.get |> Api.send GotTags
+      , Api.Articles.get [] |> Api.send GotArticles
+      ]
     )
 
 
-fetchArticles : ( Model, Cmd Msg, evt ) -> ( Model, Cmd Msg, evt )
-fetchArticles ( model, cmd, evt ) =
+fetchArticles : ( Model, List (Effect Msg), Maybe evt ) -> ( Model, List (Effect Msg), Maybe evt )
+fetchArticles (( model, _, _ ) as app) =
     let
         data =
             View.Pagination.getData model.pagination
 
-        fetchCmd =
+        fetchEff =
             Api.send GotArticles <|
                 case model.feedType of
                     GlobalFeed ->
@@ -99,33 +98,24 @@ fetchArticles ( model, cmd, evt ) =
                             , Api.Articles.Feed.offset data.offset
                             ]
     in
-    ( model, Cmd.batch [ cmd, fetchCmd ], evt )
+    app
+        |> App.withEff fetchEff
 
 
-update :
-    { r
-        | key : Browser.Navigation.Key
-    }
-    -> Msg
-    -> Model
-    -> ( Model, Cmd Msg, Maybe Never )
-update { key } msg model =
+update : Msg -> Model -> ( Model, List (Effect Msg), Maybe Never )
+update msg model =
     case msg of
         SetViewport ->
             App.pure model
 
         GotTags res ->
             App.pure { model | tags = Async.fromResponse res }
-                |> App.withCmd (Api.logIfError res)
+                |> App.withEff (Api.logIfError res)
 
         GotArticles res ->
             App.pure { model | articles = Async.fromResponse res }
-                |> App.withCmd
-                    (Cmd.batch
-                        [ Api.logIfError res
-                        , jumpToTop SetViewport
-                        ]
-                    )
+                |> App.withEff (Api.logIfError res)
+                |> App.withEff (jumpToTop SetViewport)
 
         SelectedFeed feed ->
             App.pure { model | feedType = feed, pagination = initialPagination }
@@ -139,11 +129,11 @@ update { key } msg model =
             case mUser of
                 Nothing ->
                     App.pure model
-                        |> App.withCmd (Browser.Navigation.pushUrl key (Route.toHref Route.Login))
+                        |> App.withEff (Effect.NavPushUrl <| Route.toHref Route.Login)
 
                 Just user ->
                     App.pure model
-                        |> App.withCmd
+                        |> App.withEff
                             (Api.Articles.Slug_.Favorite.post user article.slug
                                 |> Api.send ToggleFavoriteArticleResponse
                             )

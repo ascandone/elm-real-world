@@ -16,6 +16,7 @@ import Api.Profiles.Username_.Follow
 import App
 import Browser.Navigation
 import Data.Article exposing (Article)
+import Data.Async as Async exposing (Async(..))
 import Data.Comment exposing (Comment)
 import Data.Profile exposing (Profile)
 import Data.User exposing (User)
@@ -35,8 +36,8 @@ type alias Event =
 
 
 type alias Model =
-    { asyncArticle : Maybe (Api.Response Article)
-    , asyncComments : Maybe (Api.Response (List Comment))
+    { asyncArticle : Async Article
+    , asyncComments : Async (List Comment)
     , comment : String
     }
 
@@ -59,8 +60,8 @@ type Msg
 
 init : String -> ( Model, Cmd Msg )
 init slug =
-    ( { asyncArticle = Nothing
-      , asyncComments = Nothing
+    ( { asyncArticle = Pending
+      , asyncComments = Pending
       , comment = ""
       }
     , Cmd.batch
@@ -82,7 +83,7 @@ update :
 update { key, mUser } slug msg model =
     case msg of
         GotComments res ->
-            App.pure { model | asyncComments = Just res }
+            App.pure { model | asyncComments = Async.fromResponse res }
                 |> App.withCmd (Api.logIfError res)
 
         InputComment str ->
@@ -97,10 +98,10 @@ update { key, mUser } slug msg model =
 
         GotCommentResponse response ->
             case ( response, model.asyncComments ) of
-                ( Ok comment, Just (Ok comments) ) ->
+                ( Ok comment, GotData comments ) ->
                     App.pure
                         { model
-                            | asyncComments = Just (Ok (comment :: comments))
+                            | asyncComments = GotData (comment :: comments)
                             , comment = ""
                         }
 
@@ -111,11 +112,11 @@ update { key, mUser } slug msg model =
                     App.pure model
 
         GotArticle response ->
-            App.pure { model | asyncArticle = Just response }
+            App.pure { model | asyncArticle = Async.fromResponse response }
 
         ClickedFollow ->
             case ( model.asyncArticle, mUser ) of
-                ( Just (Ok article), Just user ) ->
+                ( GotData article, Just user ) ->
                     let
                         action =
                             if article.author.following then
@@ -139,7 +140,7 @@ update { key, mUser } slug msg model =
 
         ClickedFavorite ->
             case ( model.asyncArticle, mUser ) of
-                ( Just (Ok article), Just user ) ->
+                ( GotData article, Just user ) ->
                     let
                         action =
                             if article.favorited then
@@ -166,8 +167,8 @@ update { key, mUser } slug msg model =
                 ( _, Err _ ) ->
                     Debug.todo "handle err"
 
-                ( Just (Ok article), Ok profile ) ->
-                    App.pure { model | asyncArticle = Just (Ok { article | author = profile }) }
+                ( GotData article, Ok profile ) ->
+                    App.pure { model | asyncArticle = Async.fromResponse <| Ok { article | author = profile } }
 
                 _ ->
                     App.pure model
@@ -177,8 +178,8 @@ update { key, mUser } slug msg model =
                 ( _, Err _ ) ->
                     App.pure model
 
-                ( Just (Ok _), Ok article ) ->
-                    App.pure { model | asyncArticle = Just (Ok article) }
+                ( GotData _, Ok article ) ->
+                    App.pure { model | asyncArticle = GotData article }
 
                 _ ->
                     App.pure model
@@ -192,12 +193,12 @@ update { key, mUser } slug msg model =
 
         GotDeleteCommentResponse id res ->
             case ( res, model.asyncComments ) of
-                ( Ok (), Just (Ok comments) ) ->
+                ( Ok (), GotData comments ) ->
                     let
                         filtered =
                             comments |> List.filter (\comment -> comment.id /= id)
                     in
-                    App.pure { model | asyncComments = Just (Ok filtered) }
+                    App.pure { model | asyncComments = GotData filtered }
 
                 ( Err err, _ ) ->
                     App.pure model
@@ -289,19 +290,19 @@ viewCommentCard mTimeZone mUser ({ author } as comment) =
 view : { r | mUser : Maybe User, timeZone : Maybe Time.Zone } -> Model -> ( Maybe String, Html Msg )
 view { mUser, timeZone } model =
     ( case model.asyncArticle of
-        Just (Ok article) ->
+        GotData article ->
             Just article.title
 
         _ ->
             Just "Article"
     , case model.asyncArticle of
-        Nothing ->
+        Pending ->
             text "Loading..."
 
-        Just (Err _) ->
+        GotErr _ ->
             text "Error"
 
-        Just (Ok article) ->
+        GotData article ->
             let
                 articleMeta =
                     View.ArticleMeta.view
@@ -342,13 +343,13 @@ view { mUser, timeZone } model =
                                             user
                                 ]
                                 (case model.asyncComments of
-                                    Nothing ->
+                                    Pending ->
                                         []
 
-                                    Just (Err _) ->
+                                    GotErr _ ->
                                         [ text "Error" ]
 
-                                    Just (Ok comments) ->
+                                    GotData comments ->
                                         comments
                                             |> List.map (viewCommentCard timeZone mUser)
                                 )

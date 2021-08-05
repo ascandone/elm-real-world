@@ -285,18 +285,17 @@ matchArticles :
     }
     -> UP.Parser (Bool -> a) a
 matchArticles args =
-    UP.map
-        (\offset limit tag ->
-            (offset == Just args.offset)
-                && (limit == Just args.limit)
-                && (tag == args.tag)
-        )
-    <|
-        UP.s "api"
-            </> UP.s "articles"
-            <?> UPQ.int "offset"
-            <?> UPQ.int "limit"
-            <?> UPQ.string "tag"
+    UP.s "api"
+        </> UP.s "articles"
+        <?> UPQ.int "offset"
+        <?> UPQ.int "limit"
+        <?> UPQ.string "tag"
+        |> UP.map
+            (\offset limit tag ->
+                (offset == Just args.offset)
+                    && (limit == Just args.limit)
+                    && (tag == args.tag)
+            )
 
 
 specs : Test

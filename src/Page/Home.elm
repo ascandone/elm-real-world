@@ -22,9 +22,12 @@ import Html exposing (..)
 import Html.Attributes as A exposing (class)
 import Html.Events as E
 import Html.Lazy exposing (lazy2)
-import Misc exposing (checkUrl, jumpToTop)
+import Misc exposing (checkUrl, dataTest, jumpToTop)
 import Route
 import Test exposing (Test)
+import Test.Html.Event as HEvent
+import Test.Html.Query as HQuery
+import Test.Html.Selector as HSelector
 import Time
 import Url.Parser as UP exposing ((</>), (<?>))
 import Url.Parser.Query as UPQ
@@ -62,20 +65,26 @@ initialPagination =
     View.Pagination.init { pageSize = 10 }
 
 
+initModel : Model
+initModel =
+    { tags = Pending
+    , feedType = GlobalFeed
+    , pagination = initialPagination
+    , articles = Pending
+    }
+
+
+initEffs : List (Effect Msg)
+initEffs =
+    [ Api.Tags.get |> Api.send GotTags
+    , fetchArticles initModel
+    ]
+
+
 init : ( Model, List (Effect Msg) )
 init =
-    let
-        model =
-            { tags = Pending
-            , feedType = GlobalFeed
-            , pagination = initialPagination
-            , articles = Pending
-            }
-    in
-    ( model
-    , [ Api.Tags.get |> Api.send GotTags
-      , fetchArticles model
-      ]
+    ( initModel
+    , initEffs
     )
 
 
@@ -168,9 +177,10 @@ update msg model =
 viewTagPill : String -> Html Msg
 viewTagPill tag =
     a
-        [ A.href "" -- TODO route on tag
+        [ A.href ""
         , class "tag-pill tag-default"
         , E.onClick (SelectedFeed (TagFeed tag))
+        , dataTest ("tag-pill-" ++ tag)
         ]
         [ text tag ]
 
@@ -331,8 +341,7 @@ specs =
         , Test.describe "Fetch right feed when change tab"
             [ Test.test "Tag feed" <|
                 \() ->
-                    init
-                        |> Tuple.first
+                    initModel
                         |> update (SelectedFeed (TagFeed "some-tag"))
                         |> getEffs
                         |> List.any
@@ -358,4 +367,17 @@ specs =
         , Test.describe "Fetch right feed when change pagination"
             [ Test.todo "t1"
             ]
+        , Test.test "clicking tag changes tab" <|
+            let
+                page =
+                    view
+                        { mUser = Nothing, timeZone = Just Time.utc }
+                        { initModel | tags = GotData [ "first-tag", "second-tag" ] }
+                        |> Tuple.second
+                        |> HQuery.fromHtml
+                        |> HQuery.find [ HSelector.attribute (dataTest "tag-pill-first-tag") ]
+                        |> HEvent.simulate HEvent.click
+                        |> HEvent.expect (SelectedFeed (TagFeed "first-tag"))
+            in
+            \() -> page
         ]

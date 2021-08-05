@@ -3,11 +3,18 @@ module Misc exposing (..)
 import Effect exposing (Effect)
 import Expect exposing (Expectation)
 import Fuzz
+import Html
+import Html.Attributes
 import Json.Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (optional)
 import Json.Encode exposing (Value)
 import Url
 import Url.Parser
+
+
+dataTest : String -> Html.Attribute a
+dataTest =
+    Html.Attributes.attribute "data-test"
 
 
 defaultImage : Maybe String -> String

@@ -45,7 +45,6 @@ type FeedType
 type alias Model =
     { tags : Async (List String)
     , articles : Async Article.Collection
-    , articlesTimestamp : Int
     , feedType : FeedType
     , pagination : Pagination
     }
@@ -72,7 +71,6 @@ initModel =
     , feedType = GlobalFeed
     , pagination = initialPagination
     , articles = Pending
-    , articlesTimestamp = 0
     }
 
 
@@ -148,7 +146,6 @@ update msg model =
                 { model
                     | feedType = feed
                     , pagination = initialPagination
-                    , articlesTimestamp = model.articlesTimestamp + 1
                 }
                 |> withFetchArticles
 

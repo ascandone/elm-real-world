@@ -45,6 +45,7 @@ type FeedType
 type alias Model =
     { tags : Async (List String)
     , articles : Async Article.Collection
+    , articlesTimestamp : Int
     , feedType : FeedType
     , pagination : Pagination
     }
@@ -52,7 +53,7 @@ type alias Model =
 
 type Msg
     = GotTags (Api.Response (List String))
-    | GotArticles (Api.Response Article.Collection)
+    | GotArticles FeedType (Api.Response Article.Collection)
     | SelectedFeed FeedType
     | ToggleFavoriteArticle (Maybe User) Article
     | SelectedPagination Pagination
@@ -71,6 +72,7 @@ initModel =
     , feedType = GlobalFeed
     , pagination = initialPagination
     , articles = Pending
+    , articlesTimestamp = 0
     }
 
 
@@ -94,7 +96,7 @@ fetchArticles model =
         data =
             View.Pagination.getData model.pagination
     in
-    Api.send GotArticles <|
+    Api.send (GotArticles model.feedType) <|
         case model.feedType of
             GlobalFeed ->
                 Api.Articles.get
@@ -132,13 +134,22 @@ update msg model =
             App.pure { model | tags = Async.fromResponse res }
                 |> App.withEff (Api.logIfError res)
 
-        GotArticles res ->
-            App.pure { model | articles = Async.fromResponse res }
-                |> App.withEff (Api.logIfError res)
-                |> App.withEff (jumpToTop SetViewport)
+        GotArticles feed res ->
+            if model.feedType == feed then
+                App.pure { model | articles = Async.fromResponse res }
+                    |> App.withEff (Api.logIfError res)
+                    |> App.withEff (jumpToTop SetViewport)
+
+            else
+                App.pure model
 
         SelectedFeed feed ->
-            App.pure { model | feedType = feed, pagination = initialPagination }
+            App.pure
+                { model
+                    | feedType = feed
+                    , pagination = initialPagination
+                    , articlesTimestamp = model.articlesTimestamp + 1
+                }
                 |> withFetchArticles
 
         SelectedPagination pagination ->

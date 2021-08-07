@@ -59,39 +59,40 @@ function getProfile() {
   };
 }
 
-createServer({
-  models: {
-    article: Model,
-  },
+export default () =>
+  createServer({
+    models: {
+      article: Model,
+    },
 
-  routes() {
-    this.urlPrefix = "https://conduit.productionready.io";
-    this.namespace = "api";
+    routes() {
+      this.urlPrefix = "https://conduit.productionready.io";
+      this.namespace = "api";
 
-    this.get("/articles", () => articles);
-    this.post("/articles", () => ({ article: articles.articles[1] }));
+      this.get("/articles", () => articles);
+      this.post("/articles", () => ({ article: articles.articles[1] }));
 
-    this.get("/articles/feed", () => articles);
+      this.get("/articles/feed", () => articles);
 
-    this.get("/articles/:slug", () => ({ article: articles.articles[1] }));
-    this.delete("/articles/:slug", () => ({}));
-    this.put("/articles/:slug", () => ({ article: articles.articles[1] }));
+      this.get("/articles/:slug", () => ({ article: articles.articles[1] }));
+      this.delete("/articles/:slug", () => ({}));
+      this.put("/articles/:slug", () => ({ article: articles.articles[1] }));
 
-    this.post("/articles/:slug/favorite", getFavoriteArticle(true));
-    this.delete("/articles/:slug/favorite", getFavoriteArticle(false));
+      this.post("/articles/:slug/favorite", getFavoriteArticle(true));
+      this.delete("/articles/:slug/favorite", getFavoriteArticle(false));
 
-    this.get("/articles/:slug/comments", () => comments);
-    this.post("/articles/:slug/comments", postComment);
-    this.delete("/articles/:slug/comments/:id", () => ({}));
+      this.get("/articles/:slug/comments", () => comments);
+      this.post("/articles/:slug/comments", postComment);
+      this.delete("/articles/:slug/comments/:id", () => ({}));
 
-    this.get("/profiles/:username", getProfile);
-    this.post("/profiles/:username/follow", getFollowAuthor(true));
-    this.delete("/profiles/:username/follow", getFollowAuthor(false));
+      this.get("/profiles/:username", getProfile);
+      this.post("/profiles/:username/follow", getFollowAuthor(true));
+      this.delete("/profiles/:username/follow", getFollowAuthor(false));
 
-    this.get("/tags", () => ({ tags }));
+      this.get("/tags", () => ({ tags }));
 
-    this.get("/user", () => ({ user }));
-    this.put("/user", () => ({ user }));
-    this.post("/users/login", () => ({ user }));
-  },
-});
+      this.get("/user", () => ({ user }));
+      this.put("/user", () => ({ user }));
+      this.post("/users/login", () => ({ user }));
+    },
+  });

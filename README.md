@@ -17,7 +17,7 @@ Functionality:
   - Global feed
   - Tag
 
-![Home](screenshots/home.png)
+![Home](screenshots/home.jpg)
 
 ### View Post
 
@@ -32,18 +32,18 @@ Functionality:
 - Delete post (if logged in)
 - Edit post (if logged in)
 
-![Article](screenshots/article:slug_.png)
-![Article](screenshots/article:slug_%201.png)
+![Article](screenshots/article-slug.jpg)
+![Article](screenshots/article-slug-1.jpg)
 
 ### Create/Edit post
 
-![Editor](screenshots/editor.png)
+![Editor](screenshots/editor.jpg)
 
 ### Login/Register
 
-![Login](screenshots/login.png)
-![Register](screenshots/register.png)
+![Login](screenshots/login.jpg)
+![Register](screenshots/register.jpg)
 
 ### Settings
 
-![Settings](screenshots/settings.png)
+![Settings](screenshots/settings.jpg)

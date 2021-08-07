@@ -35,6 +35,18 @@ Functionality:
 ![Article](screenshots/article-slug.jpg)
 ![Article](screenshots/article-slug-1.jpg)
 
+### View Profile
+
+Functionality:
+
+- Follow profile
+- Pagination
+- Multiple tabs
+  - profile posts
+  - profile likes
+
+![Profile](screenshots/profile.jpg)
+
 ### Create/Edit post
 
 ![Editor](screenshots/editor.jpg)

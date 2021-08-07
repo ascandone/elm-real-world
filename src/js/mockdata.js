@@ -1,31 +1,21 @@
 export const tags = [
-  "‌",
-  "‌‌",
-  "‌‌‌",
-  "‌‌‌‌",
-  "‌‌‌‌‌",
-  "‌‌‌‌‌‌‌",
-  "‌‌‌‌‌‌‌‌",
-  "‌‌‌‌‌‌‌‌‌‌‌",
-  "‌‌‌‌‌‌",
-  "‌‌‌‌‌‌‌‌‌‌",
-  "HuManIty",
-  "Hu‌Man‌Ity",
-  "Gandhi",
-  "HITLER",
-  "SIDA",
-  "BlackLivesMatter",
-  "Black‌Lives‌Matter",
-  "test",
-  "dragons",
-  "butt",
+  "programming",
+  "javascript",
+  "devops",
+  "testing",
+  "docker",
+  "ux",
+  "react",
+  "redux",
+  "jobs",
+  "hello world",
 ];
 
 export const user = {
-  email: "jake@jake.jake",
+  email: "mail@example.com",
   token: "jwt.token.here",
-  username: "jake",
-  bio: "I work at statefarm",
+  username: "ascandone",
+  bio: "My own bio",
   image: null,
 };
 
@@ -47,50 +37,37 @@ export const comments = {
   ],
 };
 
+export const johnDoe = {
+  username: "John Doe",
+  bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore",
+  image:
+    "https://images.unsplash.com/photo-1600267185393-e158a98703de?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1500&q=80",
+  following: false,
+};
+
 export const articles = {
   articles: [
+    // {
+    //   title: "My first article",
+    //   slug: "my-first-article-uiz9mt",
+    //   body: "This is the best course about Angular",
+    //   createdAt: "2021-07-18T09:20:13.306Z",
+    //   updatedAt: "2021-07-18T09:20:13.306Z",
+    //   tagList: ["hello world"],
+    //   description: "Hello world! This is my first article on conduit",
+    //   author: johnDoe,
+    //   favorited: false,
+    //   favoritesCount: 0,
+    // },
     {
-      title: "fghd",
-      slug: "fghd-fhqzxt",
-      body: "# hi\ncool",
-      createdAt: "2021-07-18T09:24:49.853Z",
-      updatedAt: "2021-07-18T09:24:49.853Z",
-      tagList: ["hi"],
-      description: "fghdgf",
-      author: {
-        username: "Samuel Hart",
-        bio: null,
-        image: "https://static.productionready.io/images/smiley-cyrus.jpg",
-        following: false,
-      },
-      favorited: false,
-      favoritesCount: 0,
-    },
-    {
-      title: "My first article",
-      slug: "my-first-article-uiz9mt",
-      body: "This is the best course about Angular",
-      createdAt: "2021-07-18T09:20:13.306Z",
-      updatedAt: "2021-07-18T09:20:13.306Z",
-      tagList: [],
-      description: "About test",
-      author: {
-        username: "Alexsoft",
-        bio: null,
-        image: "https://static.productionready.io/images/smiley-cyrus.jpg",
-        following: false,
-      },
-      favorited: false,
-      favoritesCount: 0,
-    },
-    {
-      title: "title",
-      slug: "title-kejr8n",
+      title: "How to write effective tests",
+      slug: "testing",
       body: "hello world",
       createdAt: "2021-07-18T09:09:13.917Z",
       updatedAt: "2021-07-18T09:09:13.917Z",
       tagList: [],
-      description: "testing",
+      description:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
       author: {
         username: "joe",
         bio: "testing new bio",
@@ -103,17 +80,26 @@ export const articles = {
       favoritesCount: 2,
     },
     {
-      title: "sgrgrgr",
+      title: "Modern web development",
       slug: "sgrgrgr-8uir5i",
-      body: "rgrgrgrgr",
+      body: `Lorem ipsum dolor sit amet, **consectetur** adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam:
+1. quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat
+2. duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur
+3. excepteur sint occaecat cupidatat non proident
+
+Sunt in culpa qui officia deserunt mollit anim id est laborum.`,
       createdAt: "2021-07-18T08:54:14.220Z",
       updatedAt: "2021-07-18T08:54:14.220Z",
       tagList: [],
-      description: "grgrgrg",
+      description:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt",
       author: {
-        username: "Commodo in mollitia ",
+        username: "Alice",
         bio: "1",
-        image: "",
+        image:
+          "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=668&q=80",
+        // "https://media-exp1.licdn.com/dms/image/C5603AQEmC-5IB4aFxA/profile-displayphoto-shrink_200_200/0/1605720925531?e=1633564800&v=beta&t=K4b5eD5Rf3dxXnckr7JQ07gEd14nkkKgLUCfT3OZows",
         following: false,
       },
       favorited: false,

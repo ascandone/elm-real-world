@@ -1,5 +1,5 @@
 import { createServer, Model } from "miragejs";
-import { articles, tags, user, comments } from "./mockdata";
+import { articles, tags, user, comments, johnDoe } from "./mockdata";
 
 const getFavoriteArticle = (favorited) =>
   function favoriteArticle(_schema, req) {
@@ -38,9 +38,9 @@ function postComment(_schema, { requestBody }) {
       body,
       author: {
         username: "ascandone",
-        bio: "testing new bio",
+        bio: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
         image:
-          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8\u0026ixlib=rb-1.2.1\u0026auto=format\u0026fit=crop\u0026w=800\u0026q=80",
+          "https://media-exp1.licdn.com/dms/image/C5603AQEmC-5IB4aFxA/profile-displayphoto-shrink_200_200/0/1605720925531?e=1633564800&v=beta&t=K4b5eD5Rf3dxXnckr7JQ07gEd14nkkKgLUCfT3OZows",
         following: false,
       },
     },
@@ -49,13 +49,7 @@ function postComment(_schema, { requestBody }) {
 
 function getProfile() {
   return {
-    profile: {
-      username: "joe",
-      bio: "testing new bio",
-      image:
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8\u0026ixlib=rb-1.2.1\u0026auto=format\u0026fit=crop\u0026w=800\u0026q=80",
-      following: false,
-    },
+    profile: johnDoe,
   };
 }
 

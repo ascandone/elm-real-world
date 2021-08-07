@@ -3,6 +3,7 @@ module View.Nav exposing (view)
 import Data.User exposing (User)
 import Html exposing (..)
 import Html.Attributes as A exposing (class)
+import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy2)
 import Misc
 import Page exposing (Page)
@@ -52,7 +53,11 @@ navItem to_ children current =
         ]
 
 
-view_ : Maybe User -> Page -> Html msg
+type Msg
+    = ClickedSignOut
+
+
+view_ : Maybe User -> Page -> Html Msg
 view_ mUser page =
     nav [ class "navbar navbar-light" ]
         [ div [ class "container" ]
@@ -83,6 +88,15 @@ view_ mUser page =
                                         [ img [ class "user-pic", A.src <| Misc.defaultImage u.image ] []
                                         , text u.username
                                         ]
+                                    , \_ ->
+                                        li [ class "nav-item" ]
+                                            [ a
+                                                [ class "nav-link"
+                                                , A.href ""
+                                                , onClick ClickedSignOut
+                                                ]
+                                                [ text "Sign out" ]
+                                            ]
                                     ]
                            )
                 )
@@ -90,6 +104,7 @@ view_ mUser page =
         ]
 
 
-view : { r | mUser : Maybe User, page : Page } -> Html msg
-view props =
+view : { r | mUser : Maybe User, page : Page } -> { onClickedSignOut : msg } -> Html msg
+view props { onClickedSignOut } =
     lazy2 view_ props.mUser props.page
+        |> Html.map (\ClickedSignOut -> onClickedSignOut)

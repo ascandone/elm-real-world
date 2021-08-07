@@ -24,4 +24,9 @@ function main() {
   app.ports.serializeUser.subscribe((user) => {
     localStorage.setItem(USER_NS, user);
   });
+
+  app.ports.deleteUser.subscribe(() => {
+    console.log("delete");
+    // localStorage.removeItem(USER_NS);
+  });
 }

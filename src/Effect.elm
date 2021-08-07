@@ -24,6 +24,7 @@ type Effect msg
     | HttpRequest (HttpRequest_ msg)
     | PortLogError String
     | PortSerializeUser String
+    | PortDeleteUser
     | Noop
     | BrowserSetViewport Float Float msg
     | TimeHere (Time.Zone -> msg)
@@ -46,6 +47,9 @@ run key eff =
 
         PortSerializeUser str ->
             Ports.serializeUser str
+
+        PortDeleteUser ->
+            Ports.deleteUser ()
 
         Noop ->
             Cmd.none
@@ -98,6 +102,9 @@ map mapper effect =
 
         PortSerializeUser x ->
             PortSerializeUser x
+
+        PortDeleteUser ->
+            PortDeleteUser
 
         Noop ->
             Noop

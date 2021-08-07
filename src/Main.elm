@@ -4,7 +4,7 @@ import App exposing (App)
 import Browser
 import Browser.Dom exposing (Error(..))
 import Data.User as User exposing (User)
-import Effect exposing (Effect)
+import Effect exposing (Effect(..))
 import Html exposing (Html)
 import Json.Decode exposing (decodeString)
 import Json.Encode as Enc
@@ -52,6 +52,7 @@ type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url.Url
     | GotTimeZone Time.Zone
+    | ClickedSignOut
     | HomeMsg Page.Home.Msg
     | LoginMsg Page.Login.Msg
     | RegisterMsg Page.Register.Msg
@@ -104,6 +105,9 @@ update msg model =
             handleUpdate model
     in
     case ( model.page, msg ) of
+        ( _, ClickedSignOut ) ->
+            ( { model | mUser = Nothing }, [ Effect.PortDeleteUser ] )
+
         ( _, GotTimeZone timeZone ) ->
             ( { model | timeZone = Just timeZone }
             , []
@@ -269,7 +273,7 @@ view model =
     in
     { title = viewTitle mTitle
     , body =
-        [ View.Nav.view model
+        [ View.Nav.view model { onClickedSignOut = ClickedSignOut }
         , body
         , View.Footer.view
         ]

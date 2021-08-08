@@ -1,17 +1,8 @@
 import { Elm } from "../Main.elm";
 
-if (process.env.NODE_ENV === "development") {
-  import("./mockserver").then((res) => {
-    res.default();
-    main();
-  });
-} else {
-  main();
-}
+const USER_NS = "user-ns";
 
 function main() {
-  const USER_NS = "user-ns";
-
   const app = Elm.Main.init({
     node: document.getElementById("elm-root"),
     flags: {
@@ -26,7 +17,19 @@ function main() {
   });
 
   app.ports.deleteUser.subscribe(() => {
-    console.log("delete");
-    // localStorage.removeItem(USER_NS);
+    localStorage.removeItem(USER_NS);
   });
+
+  window.addEventListener("storage", () => {
+    app.ports.storageEvent.send(localStorage.getItem(USER_NS));
+  });
+}
+
+if (process.env.NODE_ENV === "development") {
+  import("./mockserver").then((res) => {
+    res.default();
+    main();
+  });
+} else {
+  main();
 }

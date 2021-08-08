@@ -18,6 +18,7 @@ import Page.NotFound
 import Page.Profile
 import Page.Register
 import Page.Settings
+import Ports
 import Route as Route exposing (Route(..))
 import Time
 import Url
@@ -37,11 +38,15 @@ type alias Flags =
     }
 
 
+parseUser : Maybe String -> Maybe User
+parseUser =
+    Maybe.andThen (decodeString User.decoder >> Result.toMaybe)
+
+
 init : Flags -> Url.Url -> ( Model, List (Effect Msg) )
 init flags url =
     { page = Page.NotFound
-    , mUser =
-        flags.user |> Maybe.andThen (decodeString User.decoder >> Result.toMaybe)
+    , mUser = parseUser flags.user
     , timeZone = Nothing
     }
         |> update (UrlChanged url)
@@ -53,6 +58,8 @@ type Msg
     | UrlChanged Url.Url
     | GotTimeZone Time.Zone
     | ClickedSignOut
+    | StorageEvent (Maybe String)
+      -- Pages msg
     | HomeMsg Page.Home.Msg
     | LoginMsg Page.Login.Msg
     | RegisterMsg Page.Register.Msg
@@ -110,6 +117,11 @@ update msg model =
 
         ( _, GotTimeZone timeZone ) ->
             ( { model | timeZone = Just timeZone }
+            , []
+            )
+
+        ( _, StorageEvent user ) ->
+            ( { model | mUser = parseUser user }
             , []
             )
 
@@ -217,7 +229,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Ports.storageEvent StorageEvent
 
 
 viewMain : Model -> ( Maybe String, Html Msg )

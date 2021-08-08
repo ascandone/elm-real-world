@@ -8,3 +8,6 @@ port serializeUser : String -> Cmd msg
 
 
 port deleteUser : () -> Cmd msg
+
+
+port storageEvent : (Maybe String -> msg) -> Sub msg
